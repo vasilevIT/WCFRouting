@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
+using System.ServiceModel.Description;
+using System.ServiceModel;
+using Library;
 
 
 //this class demonstrates a custom MessageFilter, the Round Robin Message Filter.
@@ -57,7 +60,7 @@ namespace Router
         protected override IMessageFilterTable<TFilterData> CreateFilterTable<TFilterData>()
         {
             Console.WriteLine("RoundRobinMessageFilter.IMessageFilterTable()");
-            return new RoundRobinMessageFilterTable<TFilterData>();
+            return (IMessageFilterTable<TFilterData>)(new RoundRobinMessageFilterTable<IEnumerable<System.ServiceModel.Description.ServiceEndpoint>>());
         }
 
         //set up the group that will do the round robining
@@ -89,6 +92,7 @@ namespace Router
                 Console.WriteLine("RoundRobinGroup.GetRandom()");
                 Random rm = new Random();
                 RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.filters.ElementAt(rm.Next(this.filters.Count()));
+                //нужно как-то проверить, доступна ли конечная точка или нет(если нет, то удалить ее из списка и выдать новую)
                 return next;
             }
 
@@ -167,6 +171,10 @@ namespace Router
 
         //the custom message filter table class
         class RoundRobinMessageFilterTable<TFilterData> : IMessageFilterTable<TFilterData>
+            where TFilterData :
+           // System.Collections.Generic.List<System.Collections.Generic.IEnumerable<System.ServiceModel.Description.ServiceEndpoint>>
+            IEnumerable<System.ServiceModel.Description.ServiceEndpoint>
+
         {
             Dictionary<MessageFilter, TFilterData> filters = new Dictionary<MessageFilter, TFilterData>();
             Dictionary<string, RoundRobinGroup> groups = new Dictionary<string, RoundRobinGroup>();
@@ -248,7 +256,10 @@ namespace Router
                 else if (results.Count == 1)
                 {
                     value = results[0];
+
                 }
+               // System.Collections.Generic.List<System.Collections.Generic.IEnumerable<> endpoint = value;
+         
                 return outcome;
             }
 
@@ -262,6 +273,7 @@ namespace Router
                     results.Add(this.filters[matchingFilter]);
                     foundSome = true;
                 }
+                //check results
 
                 return foundSome;
             }
@@ -272,7 +284,30 @@ namespace Router
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
-                    RoundRobinMessageFilter matchingFilter = group.GetRandom();//group.GetNext();
+                    RoundRobinMessageFilter matchingFilter;
+                    while (this.filters.Count > 0)
+                    {
+                        matchingFilter = group.GetRandom();//group.GetNext();
+
+                        try
+                        {
+                            
+                            ServiceEndpoint endpoint = this.filters[matchingFilter].ElementAt(0);
+                            BasicHttpBinding binding = new BasicHttpBinding();
+                            ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding, endpoint.Address);
+                            IInterface proxy = factory.CreateChannel();
+                            proxy.Check();
+                            
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Конечная точка не  доступна. " + e.Message);
+                            this.filters.Remove(matchingFilter);//удаляем точку
+                            continue;
+                        }
+                    }
+
                     results.Add(this.filters[matchingFilter]);
                     foundSome = true;
                 }

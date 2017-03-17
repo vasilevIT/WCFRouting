@@ -20,14 +20,14 @@ namespace Client
 
             ChannelFactory<IInterface2> factory = new ChannelFactory<IInterface2>(binding, endpoint);
             IInterface2 proxy = factory.CreateChannel();
-
-            for (int i = 0; i < 10; i++)
+            Console.ReadLine();
+            for (int i = 0; i < 100; i++)
             {
-/*
 
-                Console.WriteLine("Server say: " + proxy.Say("Hello Server! message#" + i + "!"));
-                Console.WriteLine("Server Hello say: " + proxy.SayHello("Anton"));
-*/
+
+                Console.WriteLine("Server say: " + proxy.Say("Hello Server! message#" + i + "!").Trim());
+                Console.WriteLine("Server Hello say: " + proxy.SayHello("Anton").Trim());
+
                 Random r = new Random();
 
                 Point A = new Point(r.NextDouble() * 1000, r.NextDouble() * 1000);
@@ -35,6 +35,12 @@ namespace Client
 
                 Point res = proxy.Add(A, B);
                 Console.WriteLine("Сервер сложил эти точкии и вернул сумму {0}, {1}", res.x, res.y);
+                Console.WriteLine("Продолжить?");
+                String str = Console.ReadLine();
+                if (str.Equals("n"))
+                {
+                    break;
+                }
 /*
                 Point A = new Point(1, 2);
                 Point B = new Point(3, 5.5);
@@ -58,8 +64,10 @@ namespace Client
                     Console.WriteLine("Получили исключение: " + ex.GetType().ToString());
                     Console.WriteLine(ex.Message);
                 }*/
-                  Console.ReadKey();
+               // Console.ReadKey();
             }
+
+            Console.ReadKey();
 
 
        

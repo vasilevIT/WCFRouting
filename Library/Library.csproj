@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContractCPU.cs" />
+    <Compile Include="ContractRAM.cs" />
     <Compile Include="IInterface.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

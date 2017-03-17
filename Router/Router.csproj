@@ -54,6 +54,12 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Library\Library.csproj">
+      <Project>{686e4eab-4739-4d0a-9347-433bf1f9bc3a}</Project>
+      <Name>Library</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

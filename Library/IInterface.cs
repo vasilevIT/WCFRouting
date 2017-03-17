@@ -16,6 +16,9 @@ namespace Library
         string Say(string str);
 
         [OperationContract]
+        void Check();
+
+        [OperationContract]
       //  [FaultContract(typeof(DivideByZeroException))] //Контракт сбоев
         MyMessage Calculate(MyMessage message);
     }
