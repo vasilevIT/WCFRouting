@@ -5,6 +5,7 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 using Library;
+using Router;
 
 namespace testWCF
 {
@@ -22,10 +23,24 @@ namespace testWCF
             host.Open();
 
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
+            Console.ReadLine();
+            SendCurrentState();
             Console.ReadKey();
-
+ 
             host.Close();
 
+        }
+
+        private static void SendCurrentState()
+        {
+            Uri address = new Uri("http://127.0.0.1:4000/RouterStaff");
+            BasicHttpBinding binding = new BasicHttpBinding();
+            EndpointAddress endpoint = new EndpointAddress(address);
+
+
+            ChannelFactory<IRouterService> factory = new ChannelFactory<IRouterService>(binding, endpoint);
+            IRouterService proxy = factory.CreateChannel();
+            proxy.SendData(5, 999, 1);
         }
     }
 }

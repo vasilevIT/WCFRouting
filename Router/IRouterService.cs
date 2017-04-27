@@ -5,12 +5,12 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Library
+namespace Router
 {
     [ServiceContract]
-    public interface ContractRAM
+    public interface IRouterService
     {
         [OperationContract]
-        void createBigCollection(int N);
+        bool SendData(long a,long b,long c);
     }
 }

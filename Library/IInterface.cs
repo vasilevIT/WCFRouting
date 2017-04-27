@@ -79,7 +79,7 @@ namespace Library
     }
 
     [ServiceContract]
-    public interface IInterface2 : IInterface
+    public interface IInterface2 : IInterface, ContractCPU,ContractRAM
     {
         [OperationContract]
         string SayHello(string name);

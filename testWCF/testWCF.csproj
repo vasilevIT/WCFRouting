@@ -48,13 +48,22 @@
     <Compile Include="Service.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Library\Library.csproj">
       <Project>{686e4eab-4739-4d0a-9347-433bf1f9bc3a}</Project>
       <Name>Library</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Router\Router.csproj">
+      <Project>{3f5f90dd-bb0e-4a3f-b2e2-1db14348e5ae}</Project>
+      <Name>Router</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

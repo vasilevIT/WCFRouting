@@ -17,6 +17,7 @@ namespace Client
             Uri address = new Uri("http://127.0.0.1:4000/Router");
             BasicHttpBinding binding = new BasicHttpBinding();
             EndpointAddress endpoint = new EndpointAddress(address);
+           
 
             ChannelFactory<IInterface2> factory = new ChannelFactory<IInterface2>(binding, endpoint);
             IInterface2 proxy = factory.CreateChannel();
@@ -25,6 +26,12 @@ namespace Client
             {
 
 
+                long n = 500;
+                Console.WriteLine("LongSum = " + proxy.LongSum(n));
+                Console.WriteLine("LongSum = " + proxy.LongDiv(n));
+                proxy.createBigCollection(50000);
+                Console.WriteLine("BigCollection()");
+                /*
                 Console.WriteLine("Server say: " + proxy.Say("Hello Server! message#" + i + "!").Trim());
                 Console.WriteLine("Server Hello say: " + proxy.SayHello("Anton").Trim());
 
@@ -35,6 +42,7 @@ namespace Client
 
                 Point res = proxy.Add(A, B);
                 Console.WriteLine("Сервер сложил эти точкии и вернул сумму {0}, {1}", res.x, res.y);
+                 * */
                 Console.WriteLine("Продолжить?");
                 String str = Console.ReadLine();
                 if (str.Equals("n"))

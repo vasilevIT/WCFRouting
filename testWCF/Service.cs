@@ -4,13 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Library;
 
 namespace testWCF
 {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerSession)]
-    class Service : IInterface2 , IDisposable , ContractCPU
+    class Service : IInterface2 , IDisposable , ContractCPU, ContractRAM
     {
 
         PerformanceCounter cpuCounter;
@@ -46,6 +47,62 @@ namespace testWCF
             float x2 = cpuCounter.NextValue();
             Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB",x2,ramCounter.NextValue());
             return new Point(a.x + b.x , a.y + b.y);
+        }
+
+        public long LongSum(long N)
+        {
+            float x1 = cpuCounter.NextValue();
+            long sum = 0;
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    for (int k = 0; k < N; k++)
+                    {
+                        sum = sum + i*(j ^ i) + k;
+                    }
+                }
+            }
+            float x2 = cpuCounter.NextValue();
+            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
+            return sum;
+        }
+
+        public double LongDiv(long N)
+        {
+            float x1 = cpuCounter.NextValue();
+
+            Double result = Double.MaxValue;
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    for (int k = 0; k < N; k++)
+                    {
+                        result = result / ((k - (j - i)) + 1);
+                    }
+                }
+            }
+            float x2 = cpuCounter.NextValue();
+            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
+            return result;
+        }
+
+        public void createBigCollection(int N)
+        {
+            float x1 = cpuCounter.NextValue();
+            List<double> list_double = new List<double>();
+            List<String> list_string = new List<String>();
+            Random r = new Random();
+            for (int i = 0; i < N; i++)
+            {
+                list_double.Add(r.NextDouble());
+                list_string.Add(r.NextDouble().GetHashCode().ToString());
+            }
+            Thread.Sleep(TimeSpan.FromSeconds(5));//ждем, чтобы объекты немного пожили в памяти
+            float x2 = cpuCounter.NextValue();
+            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
+
         }
 
         public MyMessage Calculate(MyMessage message)

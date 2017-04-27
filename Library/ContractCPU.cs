@@ -8,9 +8,12 @@ using System.Threading.Tasks;
 namespace Library
 {
     [ServiceContract]
-    interface ContractCPU : IInterface2
+    public interface ContractCPU
     {
         [OperationContract]
-        int LongSum(int N);
+        long LongSum(long N);
+
+        [OperationContract]
+        double LongDiv(long X);
     }
 }

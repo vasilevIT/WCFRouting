@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Description;
@@ -34,6 +35,7 @@ namespace Router
 
             this.groupName = groupName;
         }
+        
 
         void SetGroup(RoundRobinGroup group)
         {
@@ -90,6 +92,11 @@ namespace Router
             public RoundRobinMessageFilter GetRandom()
             {
                 Console.WriteLine("RoundRobinGroup.GetRandom()");
+                foreach (RoundRobinMessageFilter item in this.filters)
+                {
+                    Console.WriteLine("{0}"
+                        ,item.group.filters);
+                }
                 Random rm = new Random();
                 RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.filters.ElementAt(rm.Next(this.filters.Count()));
                 //нужно как-то проверить, доступна ли конечная точка или нет(если нет, то удалить ее из списка и выдать новую)
@@ -102,6 +109,14 @@ namespace Router
             {
                 //пока случайная реализация
                 Console.WriteLine("RoundRobinGroup.GetOptimize()");
+                //получаем список всех хостов с данными о их производительности
+                Dictionary<IPAddress, PerfomanceData> dictionary = Router.Program.nt.getDictionary();
+                //вычисляем наиболее оптимальный хост для обработки задачи
+                Dictionary<IPAddress, PerfomanceData>.KeyCollection key = dictionary.Keys;
+                //находим ключ самого эффективного хоста
+                //IPAddress key = new IPAddress();
+                //
+                IPAddress ip = key.ElementAt(0);
                 Random rm = new Random();
                 RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.filters.ElementAt(rm.Next(this.filters.Count()));
                 return next;
@@ -284,7 +299,7 @@ namespace Router
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
-                    RoundRobinMessageFilter matchingFilter;
+                    RoundRobinMessageFilter matchingFilter = null;
                     while (this.filters.Count > 0)
                     {
                         matchingFilter = group.GetRandom();//group.GetNext();
@@ -293,6 +308,8 @@ namespace Router
                         {
                             
                             ServiceEndpoint endpoint = this.filters[matchingFilter].ElementAt(0);
+                            Dictionary<IPAddress,PerfomanceData> dictionary  = Router.Program.nt.getDictionary()
+                            //выбор наиболее оптимального хоста по Address: this.filters[?].Address;
                             BasicHttpBinding binding = new BasicHttpBinding();
                             ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding, endpoint.Address);
                             IInterface proxy = factory.CreateChannel();
@@ -307,7 +324,10 @@ namespace Router
                             continue;
                         }
                     }
-
+                    if (this.filters.Count < 1)
+                    {
+                        throw new Exception("Нет доступных конечных точек.");
+                    }
                     results.Add(this.filters[matchingFilter]);
                     foundSome = true;
                 }

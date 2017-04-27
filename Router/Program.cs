@@ -7,11 +7,14 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Routing;
+using Library;
 
 namespace Router
 {
     class Program
     {
+
+        public static Notification nt;
         static void Main(string[] args)
         {
             Console.Title = "Router";
@@ -21,14 +24,26 @@ namespace Router
            {
                host.Open();
                PrintServiceInfo(host);
-               Console.ReadLine();
-               host.Close();
            }
            catch (Exception ex)
            {
                Console.WriteLine(ex.Message);
                host.Abort();
+               Console.ReadKey();
            }
+
+            ServiceHost host_staff = new ServiceHost(typeof(RouterService));
+            host_staff.Open();
+
+            PerfomanceData pr = new PerfomanceData();
+            pr.Initilization();
+            nt = new Notification(pr);
+            nt.Run();
+
+            Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
+            Console.ReadKey();
+            host.Close();
+            host_staff.Close();
         }
           static void PrintServiceInfo(ServiceHost host)
         {
