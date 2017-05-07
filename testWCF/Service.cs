@@ -79,7 +79,7 @@ namespace testWCF
                 {
                     for (int k = 0; k < N; k++)
                     {
-                        result = result / ((k - (j - i)) + 1);
+                        result = (result / (2))*1.5;
                     }
                 }
             }
@@ -99,7 +99,7 @@ namespace testWCF
                 list_double.Add(r.NextDouble());
                 list_string.Add(r.NextDouble().GetHashCode().ToString());
             }
-            Thread.Sleep(TimeSpan.FromSeconds(5));//ждем, чтобы объекты немного пожили в памяти
+            Thread.Sleep(TimeSpan.FromSeconds(2));//ждем, чтобы объекты немного пожили в памяти
             float x2 = cpuCounter.NextValue();
             Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
 
@@ -138,6 +138,11 @@ namespace testWCF
             }
             return responce;
 
+        }
+
+        public string getHostName()
+        {
+            return Program.nt.getPerfomance().Uri.ToString();
         }
 
         public void Dispose()

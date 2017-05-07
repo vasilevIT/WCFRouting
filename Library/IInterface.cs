@@ -86,6 +86,9 @@ namespace Library
 
         [OperationContract]
         Point Add(Point a, Point b);
+
+        [OperationContract]
+        string getHostName();
     }
 
     [DataContract(Namespace = "OtherNamespace")]

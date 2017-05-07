@@ -110,13 +110,13 @@ namespace Router
                 //пока случайная реализация
                 Console.WriteLine("RoundRobinGroup.GetOptimize()");
                 //получаем список всех хостов с данными о их производительности
-                Dictionary<IPAddress, PerfomanceData> dictionary = Router.Program.nt.getDictionary();
+                Dictionary<Uri, PerfomanceData> dictionary = Router.Program.nt.getDictionary();
                 //вычисляем наиболее оптимальный хост для обработки задачи
-                Dictionary<IPAddress, PerfomanceData>.KeyCollection key = dictionary.Keys;
+                Dictionary<Uri, PerfomanceData>.KeyCollection key = dictionary.Keys;
                 //находим ключ самого эффективного хоста
                 //IPAddress key = new IPAddress();
                 //
-                IPAddress ip = key.ElementAt(0);
+                Uri ip = key.ElementAt(0);
                 Random rm = new Random();
                 RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.filters.ElementAt(rm.Next(this.filters.Count()));
                 return next;
@@ -300,27 +300,43 @@ namespace Router
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
                     RoundRobinMessageFilter matchingFilter = null;
+                    ServiceEndpoint endpoint = null;
+                    Random r = new Random();
                     while (this.filters.Count > 0)
                     {
-                        matchingFilter = group.GetRandom();//group.GetNext();
-
+                        matchingFilter = group.GetRandom();
                         try
                         {
-                            
-                            ServiceEndpoint endpoint = this.filters[matchingFilter].ElementAt(0);
-                            Dictionary<IPAddress,PerfomanceData> dictionary  = Router.Program.nt.getDictionary()
-                            //выбор наиболее оптимального хоста по Address: this.filters[?].Address;
-                            BasicHttpBinding binding = new BasicHttpBinding();
-                            ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding, endpoint.Address);
-                            IInterface proxy = factory.CreateChannel();
-                            proxy.Check();
-                            
+                            //выбираем хост их списка или выполняем сами
+                            if (false)//если выполнить быстрее, чем пересылать
+                            {
+                                ;
+                            }
+                            else
+                            {
+                                endpoint = this.filters[matchingFilter].ElementAt(0);
+                                if (r.Next(0, 2) == 0)
+                                {
+                                    endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
+                                    //Program.nt.getOptimizeHost());
+                                }
+                                else
+                                {
+                                    endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/AA"));
+                                        //Program.nt.getOptimizeHost());
+                                }
+                                BasicHttpBinding binding = new BasicHttpBinding();
+                                ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
+                                    endpoint.Address);
+                                IInterface proxy = factory.CreateChannel();
+                                proxy.Check();
+                            }
                             break;
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine("Конечная точка не  доступна. " + e.Message);
-                            this.filters.Remove(matchingFilter);//удаляем точку
+                          //  this.filters.Remove(matchingFilter);//удаляем точку
                             continue;
                         }
                     }
@@ -328,7 +344,17 @@ namespace Router
                     {
                         throw new Exception("Нет доступных конечных точек.");
                     }
-                    results.Add(this.filters[matchingFilter]);
+                    //тут добавляем конечную точку сервиса на которую уйдет наше сообщение
+                    TFilterData filter = this.filters[matchingFilter];
+                    IList<ServiceEndpoint> list = (IList<ServiceEndpoint>)filter;
+                    //ServiceEndpoint ep = list[0];
+                    //ep.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
+                    //ServiceEndpoint newep = new ServiceEndpoint(new Uri("http://localhost:4000/A2"));
+
+                    list[0] = endpoint;
+                    filter = (TFilterData)list;
+                   // this.filters[matchingFilter] = (TFilterData)list;
+                    results.Add(filter);
                     foundSome = true;
                 }
 

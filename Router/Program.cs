@@ -17,7 +17,7 @@ namespace Router
         public static Notification nt;
         static void Main(string[] args)
         {
-            Console.Title = "Router";
+           Console.Title = "Router";
            ServiceHost host = new ServiceHost(typeof(RoutingService));
 
            try
@@ -35,9 +35,11 @@ namespace Router
             ServiceHost host_staff = new ServiceHost(typeof(RouterService));
             host_staff.Open();
 
+            EndpointAddress address = host.Description.Endpoints[0].Address;
+
             PerfomanceData pr = new PerfomanceData();
-            pr.Initilization();
-            nt = new Notification(pr);
+            pr.Initilization(address);
+            nt = new Notification();
             nt.Run();
 
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");

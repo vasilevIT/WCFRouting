@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using System.ServiceModel.Routing;
 using System.Text;
 using System.Threading.Tasks;
 using Library;
@@ -11,6 +12,7 @@ namespace testWCF
 {
     class Program
     {
+        public static Notification nt;
         static void Main(string[] args)
         {
             Console.Title = "Server";
@@ -21,7 +23,27 @@ namespace testWCF
             ServiceHost host = new ServiceHost(typeof(Service));
 //            host.AddServiceEndpoint(contract, binding, address);
             host.Open();
+            
+            ServiceHost routing_host = new ServiceHost(typeof(RoutingService));
 
+            try
+            {
+                routing_host.Open();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                routing_host.Abort();
+                Console.ReadKey();
+            }
+ 
+            EndpointAddress address = host.Description.Endpoints[0].Address;
+
+            PerfomanceData pr = new PerfomanceData();
+            pr.Initilization(address);
+            nt = new Notification(address, pr);
+            nt.Run();
+            
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
             Console.ReadLine();
             SendCurrentState();
@@ -33,7 +55,7 @@ namespace testWCF
 
         private static void SendCurrentState()
         {
-            Uri address = new Uri("http://127.0.0.1:4000/RouterStaff");
+            Uri address = new Uri("http://localhost:4000/RouterStaff");
             BasicHttpBinding binding = new BasicHttpBinding();
             EndpointAddress endpoint = new EndpointAddress(address);
 

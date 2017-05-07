@@ -46,7 +46,6 @@
     <Compile Include="IRouterService.cs" />
     <Compile Include="MyMessageFilter.cs" />
     <Compile Include="MyReplyRouter.cs" />
-    <Compile Include="Notification.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RoundRobinMessageFilter.cs" />

@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Library
 {
     [Serializable]
-    public class PerfomanceData
+    public class PerfomanceData : ICloneable
     {
         private double cpu;
         private double ram;
         private int count_task;
-        private IPAddress ip;
+        private Uri uri;
         private string type;
         [NonSerialized]
         private PerformanceCounter cpuCounter;
@@ -47,10 +48,10 @@ namespace Library
             set { count_task = value; }
         }
 
-        public IPAddress Ip
+        public Uri Uri
         {
-            get { return ip; }
-            set { ip = value; }
+            get { return uri; }
+            set { uri = value; }
         }
 
         public string Type
@@ -61,31 +62,32 @@ namespace Library
 
         public override string ToString()
         {
-            return $"cpu: {cpu}, ram: {ram}, count_task: {count_task}, ip: {ip}, type: {type}";
+            return $"cpu: {cpu}, ram: {ram}, count_task: {count_task}, uri: {uri}, type: {type}";
         }
 
 
-        public void Initilization()
+        public void Initilization(EndpointAddress address)
         {
             String strHostName = string.Empty;
-            // Getting Ip address of local machine...
-            // First get the host name of local machine.
             strHostName = Dns.GetHostName();
             Console.WriteLine("Local Machine's Host Name: " + strHostName);
-            // Then using host name, get the IP address list..
             IPHostEntry ipEntry = Dns.GetHostEntry(strHostName);
             IPAddress[] addr = ipEntry.AddressList;
-            
-            /*
-            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB, ip: {2}"
-                , cpuCounter.NextValue()
-                , ramCounter.NextValue()
-                ,"localhost");
-            */
             cpu = cpuCounter.NextValue();
             ram = ramCounter.NextValue();
-            ip = addr[1];
+            uri = address.Uri;
 
+        }
+
+        public object Clone()
+        {
+            PerfomanceData clon = new PerfomanceData();
+            clon.Uri = this.Uri;
+            clon.CountTask = this.CountTask;
+            clon.Cpu = this.Cpu;
+            clon.Ram = this.Ram;
+            clon.Type = this.Type;
+            return (object) clon;
         }
     }
 }

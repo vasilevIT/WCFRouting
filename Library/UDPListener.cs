@@ -14,11 +14,14 @@ namespace Library
     {
             private const int listenPort = 11000;
 
-            public void StartListener(ref Dictionary<IPAddress,PerfomanceData> dictionary)
+            public void StartListener(ref Dictionary<Uri,PerfomanceData> dictionary)
             {
                 bool done = false;
+                IPEndPoint localpt = new IPEndPoint(IPAddress.Any, listenPort);
 
-                UdpClient listener = new UdpClient(listenPort);
+                UdpClient listener = new UdpClient();
+                listener.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                listener.Client.Bind(localpt);
                 IPEndPoint groupEP = new IPEndPoint(IPAddress.Broadcast, listenPort);
 
                 try
@@ -35,14 +38,21 @@ namespace Library
                         Console.WriteLine("Received broadcast from {0} :\n {1}\n",
                         groupEP.ToString(),
                         x.ToString());
-                        if (dictionary.ContainsKey(x.Ip))
+                        if (dictionary.ContainsKey(x.Uri))
                         {
-                            dictionary[x.Ip] = x;
+                            dictionary[x.Uri] = x;
                         }
                         else
                         {
-                            dictionary.Add(x.Ip,x);
+                            dictionary.Add(x.Uri,x);
                         }
+                        int i = 0;
+                        foreach (var item in dictionary)
+                        {
+                            Console.WriteLine("item{0} = {1}",i,item.ToString());
+                            i++;
+                        }
+                        Console.WriteLine();
                     }
 
                 }
