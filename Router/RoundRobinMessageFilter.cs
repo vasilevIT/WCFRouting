@@ -274,7 +274,7 @@ namespace Router
 
                 }
                // System.Collections.Generic.List<System.Collections.Generic.IEnumerable<> endpoint = value;
-         
+                //уходит одна serviceendpoin, а сообщение отсылается на другую(которую первый раз указали
                 return outcome;
             }
 
@@ -318,13 +318,16 @@ namespace Router
                                 if (r.Next(0, 2) == 0)
                                 {
                                     endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
+                                    endpoint.Name = "point1";
                                     //Program.nt.getOptimizeHost());
                                 }
                                 else
                                 {
                                     endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/AA"));
-                                        //Program.nt.getOptimizeHost());
+                                    endpoint.Name = "point2";
+                                    //Program.nt.getOptimizeHost());
                                 }
+
                                 BasicHttpBinding binding = new BasicHttpBinding();
                                 ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
                                     endpoint.Address);

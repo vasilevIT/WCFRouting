@@ -41,7 +41,7 @@ namespace Library
             while (true)
             {
                 x.Initilization(address);
-                Console.WriteLine("Library.Sender(int x = {0});", x.ToString());
+              //  Console.WriteLine("Library.Sender(int x = {0});", x.ToString());
                 Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
 ProtocolType.Udp);
                 s.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
@@ -54,7 +54,7 @@ ProtocolType.Udp);
                 byte[] msg = stream.ToArray();
                 s.SendTo(msg, ep);
 
-                Console.WriteLine("Message sent to the broadcast address");
+               // Console.WriteLine("Message sent to the broadcast address");
                 Thread.Sleep(interval);
             }
         }

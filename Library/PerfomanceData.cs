@@ -70,7 +70,7 @@ namespace Library
         {
             String strHostName = string.Empty;
             strHostName = Dns.GetHostName();
-            Console.WriteLine("Local Machine's Host Name: " + strHostName);
+           // Console.WriteLine("Local Machine's Host Name: " + strHostName);
             IPHostEntry ipEntry = Dns.GetHostEntry(strHostName);
             IPAddress[] addr = ipEntry.AddressList;
             cpu = cpuCounter.NextValue();

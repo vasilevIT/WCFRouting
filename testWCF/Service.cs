@@ -31,7 +31,7 @@ namespace testWCF
 
         public void Check()
         {
-            ;
+            Console.WriteLine("Check();");
         }
 
         public string SayHello(string name)
@@ -142,7 +142,8 @@ namespace testWCF
 
         public string getHostName()
         {
-            return Program.nt.getPerfomance().Uri.ToString();
+            Console.WriteLine("this.GetHashCode() = {0}", this.GetHashCode());
+            return Program.nt.getPerfomance().Uri.ToString() + this.GetHashCode();
         }
 
         public void Dispose()

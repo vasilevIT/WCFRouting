@@ -28,16 +28,17 @@ namespace Library
                 {
                     while (!done)
                     {
-                        Console.WriteLine("Waiting for broadcast");
+                       // Console.WriteLine("Waiting for broadcast");
                         byte[] bytes = listener.Receive(ref groupEP);
                         MemoryStream stream = new MemoryStream();
                         BinaryFormatter formatter = new BinaryFormatter();
                         stream.Write(bytes, 0, bytes.Length);
                         stream.Seek(0, SeekOrigin.Begin);
                         PerfomanceData x = (PerfomanceData)formatter.Deserialize(stream);
-                        Console.WriteLine("Received broadcast from {0} :\n {1}\n",
+                       /* Console.WriteLine("Received broadcast from {0} :\n {1}\n",
                         groupEP.ToString(),
                         x.ToString());
+                        */
                         if (dictionary.ContainsKey(x.Uri))
                         {
                             dictionary[x.Uri] = x;
@@ -46,16 +47,18 @@ namespace Library
                         {
                             dictionary.Add(x.Uri,x);
                         }
-                        int i = 0;
-                        foreach (var item in dictionary)
-                        {
-                            Console.WriteLine("item{0} = {1}",i,item.ToString());
-                            i++;
-                        }
-                        Console.WriteLine();
+                    /*
+                    int i = 0;
+                    foreach (var item in dictionary)
+                    {
+                        Console.WriteLine("item{0} = {1}",i,item.ToString());
+                        i++;
                     }
-
+                    Console.WriteLine();
+                    */
                 }
+
+            }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
