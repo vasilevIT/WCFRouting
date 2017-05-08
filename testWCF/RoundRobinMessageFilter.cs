@@ -18,7 +18,7 @@ using Library;
 //filter.  The Round Robin algorithm here is (probably) not thread safe, but does show
 //an interesting implementation which involves the creation of a RoundRobinMessageFilterTable.
 //See http://msdn.microsoft.com/en-us/library/ms599871.aspx and http://msdn.microsoft.com/en-us/library/ms599841.aspx
-namespace Router
+namespace testWCF
 {
     public class RoundRobinMessageFilter : MessageFilter
     {
@@ -102,9 +102,8 @@ namespace Router
                         i++;
                     }
                     Console.WriteLine("RoundRobinGroup.GetRandom() Before get filter 0 ");
-                    Random rn = new Random();
                     RoundRobinMessageFilter next =
-                        (RoundRobinMessageFilter) this.filters.ElementAt(rn.Next(0,this.filters.Count));
+                        (RoundRobinMessageFilter) this.filters[0];
                     Console.WriteLine("RoundRobinGroup.GetRandom() After get filter 0 ");
                     //нужно как-то проверить, доступна ли конечная точка или нет(если нет, то удалить ее из списка и выдать новую)
                     return next;
@@ -123,7 +122,7 @@ namespace Router
                 //пока случайная реализация
                 Console.WriteLine("RoundRobinGroup.GetOptimize()");
                 //получаем список всех хостов с данными о их производительности
-                Dictionary<Uri, PerfomanceData> dictionary = Router.Program.nt.getDictionary();
+                Dictionary<Uri, PerfomanceData> dictionary = Program.nt.getDictionary();
                 //вычисляем наиболее оптимальный хост для обработки задачи
                 Dictionary<Uri, PerfomanceData>.KeyCollection key = dictionary.Keys;
                 //находим ключ самого эффективного хоста
@@ -325,7 +324,7 @@ namespace Router
                             {
                                 Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
                                 endpoint = this.filters[matchingFilter].ElementAt(0);
-                                endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
+                               // endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
                             }
                             else
                             {

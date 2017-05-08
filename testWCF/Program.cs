@@ -6,13 +6,13 @@ using System.ServiceModel.Routing;
 using System.Text;
 using System.Threading.Tasks;
 using Library;
-using Router;
 
 namespace testWCF
 {
-    class Program
+    public class Program
     {
         public static Notification nt;
+        public static bool isRouter = false;
         static void Main(string[] args)
         {
             Console.Title = "Server";
@@ -37,7 +37,7 @@ namespace testWCF
                 Console.ReadKey();
             }
  
-            EndpointAddress address = host.Description.Endpoints[0].Address;
+            EndpointAddress address = routing_host.Description.Endpoints[0].Address;
 
             PerfomanceData pr = new PerfomanceData();
             pr.Initilization(address);
@@ -46,13 +46,13 @@ namespace testWCF
             
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
             Console.ReadLine();
-            SendCurrentState();
+           // SendCurrentState();
             Console.ReadKey();
  
             host.Close();
 
         }
-
+        /*
         private static void SendCurrentState()
         {
             Uri address = new Uri("http://localhost:4000/RouterStaff");
@@ -64,5 +64,6 @@ namespace testWCF
             IRouterService proxy = factory.CreateChannel();
             proxy.SendData(5, 999, 1);
         }
+        */
     }
 }

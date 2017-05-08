@@ -86,25 +86,42 @@ ProtocolType.Udp);
         public Uri getOptimizeHost()
         {
             Dictionary<Uri,PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
+
+            int n = rand.Next(0, 2);
+            Console.WriteLine("Random.Nex(0,{0}) = {1}", 2, n);
+            int i = 0;
+            //копирование, чтобы не допустить изменения словаря во время обновления данных
             foreach (KeyValuePair<Uri,PerfomanceData> item in dictionary)
             {
                 tempDict.Add(item.Key,(PerfomanceData)item.Value.Clone());
-            }
-            IEnumerator en = tempDict.Values.GetEnumerator();
-            int k = tempDict.Count;
-            int n = rand.Next(0,3)-1;
-            Console.WriteLine("Random.Nex(0,3) = {0}",n);
-            int i = 0;
-            while(en.MoveNext())
-            {
                 if (i == n)
                 {
-                    PerfomanceData pd = (PerfomanceData)en.Current;
-                    return new Uri(pd.Uri.AbsoluteUri);
+                    Console.WriteLine("Url[{0}] = {1}", i, item.Value.Uri.ToString());
                 }
                 i++;
             }
-            return null;
+
+            //реализация выбора хоста(пока рандом)
+            PerfomanceData pd = null;
+            IEnumerator en = tempDict.Values.GetEnumerator();
+            double min_cpu = 111;
+            Uri min_uri = null;
+            while(en.MoveNext())
+            {
+                pd = (PerfomanceData)en.Current;
+                if (min_cpu > pd.Cpu )
+                {
+                    min_cpu = pd.Cpu;
+                    min_uri = pd.Uri;
+                }
+            }
+
+            return new Uri(tempDict[min_uri].Uri.AbsoluteUri);
+        }
+
+        private Dictionary<Uri, PerfomanceData> sortDict(ref Dictionary<Uri, PerfomanceData> tempDict)
+        {
+            return tempDict;
         }
 
         public PerfomanceData getPerfomance()

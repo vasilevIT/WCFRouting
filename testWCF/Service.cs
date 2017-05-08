@@ -143,7 +143,7 @@ namespace testWCF
         public string getHostName()
         {
             Console.WriteLine("this.GetHashCode() = {0}", this.GetHashCode());
-            return Program.nt.getPerfomance().Uri.ToString() + this.GetHashCode();
+            return Program.nt.getPerfomance().Uri.ToString() + " " + this.GetHashCode();
         }
 
         public void Dispose()

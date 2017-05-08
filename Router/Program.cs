@@ -11,14 +11,16 @@ using Library;
 
 namespace Router
 {
-    class Program
+    public class Program
     {
 
         public static Notification nt;
+        public static bool isRouter = true;
+
         static void Main(string[] args)
         {
            Console.Title = "Router";
-           ServiceHost host = new ServiceHost(typeof(RoutingService));
+        ServiceHost host = new ServiceHost(typeof(RoutingService));
 
            try
            {
