@@ -24,6 +24,9 @@ namespace Client
             Console.ReadLine();
             for (int i = 0; i < 100; i++)
             {
+                MyMessage ms = new MyMessage("*",1,3,0);
+                ms = proxy.Calculate(ms);
+                Console.WriteLine("calculate! Operation{0}, arg1= {1}, arg2 = {2}, result ={3}",ms.Operation,ms.N1, ms.N2 ,ms.Result);
                 //long n = 50;
                 //Console.WriteLine("LongSum = " + proxy.LongSum(n));
                 //Console.WriteLine("LongDiv = " + proxy.LongDiv(10));

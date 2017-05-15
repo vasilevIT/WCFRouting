@@ -10,6 +10,7 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Description;
 using System.ServiceModel;
+using System.Xml;
 using Library;
 
 
@@ -307,6 +308,21 @@ namespace testWCF
 
             public bool GetMatchingValues(Message message, ICollection<TFilterData> results)
             {
+                //int ttl = message.Headers.GetHeader<int>("To", "http://tempuri.org/");
+                //XmlDictionaryReader reader = message.Headers.GetReaderAtHeader(1);
+              
+                //   string content = reader.ReadOuterXml();
+                //    Console.WriteLine("header(1) = {0}", content);
+
+                //MessageHeaders mHeaders = message.Headers;
+                //MessageHeaderInfo head =  mHeaders[1];
+                ////head.
+                //foreach (var header in mHeaders)
+                //{
+                //    Console.WriteLine("header = {0}", header.ToString());
+                    
+                //}
+                //MyMessage ms = message;
                 Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])",message.ToString(),results.GetType());
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)

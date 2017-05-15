@@ -26,17 +26,21 @@ namespace Library
     [MessageContract]
     public class MyMessage
     {
+        const int MAX_TTL = 5;
         private string operation;
+        private int ttl;
         private double n1;
         private double n2;
         private double result;
 
         public MyMessage()
         {
+            ttl = MAX_TTL;
         }
 
         public MyMessage(string operation, double n1, double n2, double result)
         {
+            ttl = MAX_TTL;
             this.operation = operation;
             this.n1 = n1;
             this.n2 = n2;
@@ -44,10 +48,17 @@ namespace Library
         }
         public MyMessage(MyMessage message)
         {
+            ttl = MAX_TTL;
             this.operation = message.operation;
             this.n1 = message.n1;
             this.n2 = message.n2;
             this.result = message.result;
+        }
+
+        [MessageHeader]
+        public int TTL {
+            get { return ttl;  }
+            set { ttl = value; }
         }
 
         [MessageHeader]
