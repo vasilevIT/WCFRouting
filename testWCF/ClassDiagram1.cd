@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="testWCF.Program">
+    <Position X="1.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIQAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="testWCF.RoundRobinMessageFilter">
+    <Position X="6.75" Y="7.75" Width="2.75" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="testWCF.RoundRobinMessageFilter.RoundRobinGroup" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>RoundRobinMessageFilter.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="testWCF.RoundRobinMessageFilter.RoundRobinMessageFilterTable&lt;TFilterData&gt;" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>RoundRobinMessageFilter.cs</NewMemberFileName>
+        </TypeIdentifier>
+        <Lollipop Position="0.2" />
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>QAAAAwAAAAAAAAAAAAAAAAAAABAAQAAAAAAAAAAAAAA=</HashCode>
+      <FileName>RoundRobinMessageFilter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="testWCF.Service">
+    <Position X="4" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAMAQAgAACAABAAAAQAAAAAAACAAAAAAAgAAIIAAAAA=</HashCode>
+      <FileName>Service.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="System.Object" Collapsed="true">
+    <Position X="3" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="System.ServiceModel.Dispatcher.MessageFilter">
+    <Position X="7.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Library.MyMessage">
+    <Position X="10.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Library.Notification">
+    <Position X="12.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Library.PerfomanceData" BaseTypeListCollapsed="true">
+    <Position X="14" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Library.UDPListener">
+    <Position X="12.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Interface Name="Library.IInterface">
+    <Position X="6.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="Library.IInterface2">
+    <Position X="6.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

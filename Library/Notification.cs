@@ -88,16 +88,12 @@ ProtocolType.Udp);
             Dictionary<Uri,PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
 
             int n = rand.Next(0, 2);
-            Console.WriteLine("Random.Nex(0,{0}) = {1}", 2, n);
+           // Console.WriteLine("Random.Nex(0,{0}) = {1}", 2, n);
             int i = 0;
             //копирование, чтобы не допустить изменения словаря во время обновления данных
             foreach (KeyValuePair<Uri,PerfomanceData> item in dictionary)
             {
                 tempDict.Add(item.Key,(PerfomanceData)item.Value.Clone());
-                if (i == n)
-                {
-                    Console.WriteLine("Url[{0}] = {1}", i, item.Value.Uri.ToString());
-                }
                 i++;
             }
 
@@ -115,7 +111,7 @@ ProtocolType.Udp);
                     min_uri = pd.Uri;
                 }
             }
-
+            Console.WriteLine("geteOptimizeHost(); == {0}", tempDict[min_uri].Uri.AbsoluteUri);
             return new Uri(tempDict[min_uri].Uri.AbsoluteUri);
         }
 
@@ -127,6 +123,52 @@ ProtocolType.Udp);
         public PerfomanceData getPerfomance()
         {
             return x;
+        }
+
+        public Uri getOptimizeHostNoSelf()
+        {
+            try
+            {
+                Dictionary<Uri, PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
+
+                int n = rand.Next(0, 2);
+                int i = 0;
+                //копирование, чтобы не допустить изменения словаря во время обновления данных
+                foreach (KeyValuePair<Uri, PerfomanceData> item in dictionary)
+                {
+                    if (item.Key != address.Uri)
+                    {
+                        tempDict.Add(item.Key, (PerfomanceData) item.Value.Clone());
+                    }
+                    i++;
+                }
+
+                //реализация выбора хоста(пока рандом)
+                PerfomanceData pd = null;
+                IEnumerator en = tempDict.Values.GetEnumerator();
+                double min_cpu = 111;
+                Uri min_uri = null;
+                i = 0;
+                while (en.MoveNext())
+                {
+                    pd = (PerfomanceData) en.Current;
+                    Console.WriteLine(pd.ToString());
+                    if (min_cpu > pd.Cpu)
+                    {
+                        min_cpu = pd.Cpu;
+                        min_uri = pd.Uri;
+                    }
+                    i++;
+                }
+
+                Console.WriteLine("geteOptimizeHostNoSelf(); == {0}", tempDict[min_uri].Uri.AbsoluteUri);
+                return new Uri(tempDict[min_uri].Uri.AbsoluteUri);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error in getOptimizeHostNoSelf(): " + e.Message);
+                return null;
+            }
         }
     }
 }

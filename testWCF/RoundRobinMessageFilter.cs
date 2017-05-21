@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.ServiceModel.Channels;
@@ -88,24 +89,28 @@ namespace testWCF
                 this.AdvanceEnumerator();
                 return next;
             }
+
+
             //get random filter
             //выбирает случаный фильтр из списка
             public RoundRobinMessageFilter GetRandom()
             {
-                Console.WriteLine("RoundRobinGroup.GetRandom()");
+                //Console.WriteLine("RoundRobinGroup.GetRandom()");
                 try
                 {
                     int i = 0;
+                    /*
                     foreach (RoundRobinMessageFilter item in this.filters)
                     {
                         Console.WriteLine("filter[{0}] = {1}"
                             ,i ,item);
                         i++;
                     }
-                    Console.WriteLine("RoundRobinGroup.GetRandom() Before get filter 0 ");
+                    */
+                    //Console.WriteLine("RoundRobinGroup.GetRandom() Before get filter 0 ");
                     RoundRobinMessageFilter next =
                         (RoundRobinMessageFilter) this.filters[0];
-                    Console.WriteLine("RoundRobinGroup.GetRandom() After get filter 0 ");
+                    //Console.WriteLine("RoundRobinGroup.GetRandom() After get filter 0 ");
                     //нужно как-то проверить, доступна ли конечная точка или нет(если нет, то удалить ее из списка и выдать новую)
                     return next;
                 }
@@ -272,7 +277,7 @@ namespace testWCF
             //вызывается при получении сообщения
             public bool GetMatchingValue(Message message, out TFilterData value)
             {
-                Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValue(Message[{0}], out TFilterData",message.ToString());
+              //  Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValue(Message[{0}], out TFilterData",message.ToString());
                 value = default(TFilterData);
                 List<TFilterData> results = new List<TFilterData>();
                 //получаем endPoint
@@ -293,7 +298,7 @@ namespace testWCF
 
             public bool GetMatchingValues(MessageBuffer messageBuffer, ICollection<TFilterData> results)
             {
-                Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(MessageBuffer[{0}], ICollection<TFilterData>)",messageBuffer.CreateMessage().ToString());
+               // Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(MessageBuffer[{0}], ICollection<TFilterData>)",messageBuffer.CreateMessage().ToString());
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
@@ -308,22 +313,28 @@ namespace testWCF
 
             public bool GetMatchingValues(Message message, ICollection<TFilterData> results)
             {
-                //int ttl = message.Headers.GetHeader<int>("To", "http://tempuri.org/");
-                //XmlDictionaryReader reader = message.Headers.GetReaderAtHeader(1);
-              
-                //   string content = reader.ReadOuterXml();
-                //    Console.WriteLine("header(1) = {0}", content);
-
-                //MessageHeaders mHeaders = message.Headers;
-                //MessageHeaderInfo head =  mHeaders[1];
-                ////head.
-                //foreach (var header in mHeaders)
-                //{
-                //    Console.WriteLine("header = {0}", header.ToString());
-                    
-                //}
-                //MyMessage ms = message;
-                Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])",message.ToString(),results.GetType());
+                int TTL = 0;
+               // Console.WriteLine("Message HashCode1: {0}", message);
+                // message = TransformMessage(message);
+                try
+                {
+                    string hi = message.Headers.GetHeader<string>("TTL", "");
+                    TTL = Int32.Parse(hi);
+                    TTL = TTL - 1;
+                    message.Headers.RemoveAt(0);
+                    message.Headers.Add(MessageHeader.CreateHeader("TTL", "", TTL));
+                }
+                catch (Exception e)
+                {
+                    ;
+                }
+              //  Console.WriteLine("Message HashCode2: {0}",message);
+               // Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])",message.ToString(),results.GetType());
+                Console.WriteLine("TIME:{2} RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])"
+                    ,message.GetHashCode()
+                    ,results.GetHashCode()
+                    ,DateTime.Now.ToString());
+                Console.WriteLine("TTL = {0}",TTL);
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
@@ -332,38 +343,51 @@ namespace testWCF
                     Random r = new Random();
                     while (this.filters.Count > 0)
                     {
-                        matchingFilter = group.GetRandom();
+                       // matchingFilter = group.GetNext();
                         try
                         {
                             //выбираем хост их списка или выполняем сами
                             if (!Program.isRouter)//если выполнить быстрее, чем пересылать
                             {
-                                Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
-                                endpoint = this.filters[matchingFilter].ElementAt(0);
-                               // endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
-                            }
-                            else
-                            {
-                                endpoint = this.filters[matchingFilter].ElementAt(0);
-                                endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
-                                /*
-                                if (r.Next(0, 2) == 0)
+                                if (TTL < 1)
                                 {
-                                    endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
-                                    endpoint.Name = "point1";
+                                    Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
+                                    Uri uri_self = Program.nt.getPerfomance().Uri;
+                                    uri_self = new Uri(uri_self.AbsoluteUri.Replace("Router",""));
+                                    matchingFilter = GetByUri(group, uri_self);
+                                    endpoint = this.filters[matchingFilter].ElementAt(0);
+
+                                    BasicHttpBinding binding = new BasicHttpBinding();
+                                    ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
+                                        endpoint.Address);
+                                    IInterface proxy = factory.CreateChannel();
+                                     proxy.Check();
                                 }
                                 else
                                 {
-                                    endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/AA"));
-                                    endpoint.Name = "point2";
+                                    Uri uri = Program.nt.getOptimizeHostNoSelf();
+                                    if (uri != null)
+                                    {
+                                        matchingFilter = GetByUri(group, uri);
+                                        endpoint = this.filters[matchingFilter].ElementAt(0);
+                                        BasicHttpBinding binding = new BasicHttpBinding();
+                                        ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
+                                            endpoint.Address);
+                                        IInterface proxy = factory.CreateChannel();
+                                       // proxy.Check();
+                                    }
                                 }
-                                */
-
+                            }
+                            else
+                            {
+                                Uri uri = Program.nt.getOptimizeHost();
+                                matchingFilter = GetByUri(group, uri);
+                                endpoint = this.filters[matchingFilter].ElementAt(0);
                                 BasicHttpBinding binding = new BasicHttpBinding();
                                 ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
                                     endpoint.Address);
                                 IInterface proxy = factory.CreateChannel();
-                                proxy.Check();
+                               // proxy.Check();
                             }
                             break;
                         }
@@ -380,19 +404,29 @@ namespace testWCF
                     }
                     //тут добавляем конечную точку сервиса на которую уйдет наше сообщение
                     TFilterData filter = this.filters[matchingFilter];
-                    IList<ServiceEndpoint> list = (IList<ServiceEndpoint>)filter;
-                    //ServiceEndpoint ep = list[0];
-                    //ep.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
-                    //ServiceEndpoint newep = new ServiceEndpoint(new Uri("http://localhost:4000/A2"));
-
-                    list[0] = endpoint;
-                    filter = (TFilterData)list;
-                   // this.filters[matchingFilter] = (TFilterData)list;
                     results.Add(filter);
                     foundSome = true;
                 }
 
                 return foundSome;
+            }
+
+            //выбор оптимального хоста из группы по URI
+            public RoundRobinMessageFilter GetByUri(RoundRobinGroup group, Uri uri)
+            {
+
+                RoundRobinMessageFilter filter = null;
+                int i = 0;
+                int max = this.filters.Count;
+                while (i < max)
+                {
+                    filter =group.GetNext();
+                    if (this.filters[filter].ElementAt(0).Address.Uri == uri)
+                    {
+                        break;
+                    }
+                }
+                return filter;//this.filters[filter].ElementAt(0);
             }
 
             //add a message filter to the MessageFilterTable
@@ -494,6 +528,82 @@ namespace testWCF
             IEnumerator IEnumerable.GetEnumerator()
             {
                 throw new NotImplementedException();
+            }
+
+
+            private Message TransformMessage(Message oldMessage)
+            {
+
+                Console.WriteLine("TransformMessage();\nOldMessage: " + oldMessage.ToString());
+               // Message newMessage = null;
+                
+                //Message tmpMessage = msgbuf.CreateMessage();
+                if (oldMessage.Headers.Count > 2)
+                {
+
+                    /* MessageBuffer mb = oldMessage.CreateBufferedCopy(Int32.MaxValue);
+                     Message tempMessage = mb.CreateMessage();
+                     XmlDictionaryReader xdr = tempMessage.Headers.GetReaderAtHeader(1); //.GetReaderAtBodyContents();
+
+                     XmlDocument xdoc = new XmlDocument();
+                     xdoc.Load(xdr);
+                     xdr.Close();
+
+                     XmlNamespaceManager nsmgr = new XmlNamespaceManager(xdoc.NameTable);
+                     nsmgr.AddNamespace("h", "http://tempuri.org/");
+                     XmlNode node = xdoc.SelectSingleNode("h:TTL",nsmgr);
+                     if (node != null)
+                     {
+                         node.InnerText = (Int32.Parse(node.InnerText) - 1).ToString();
+
+                         XmlWriterSettings settings = new XmlWriterSettings();
+                         settings.ConformanceLevel = ConformanceLevel.Fragment;
+
+                         MemoryStream ms = new MemoryStream();
+                         XmlWriter xw = XmlWriter.Create(ms, settings);
+                         XmlDocumentFragment xdf = xdoc.CreateDocumentFragment();
+                         xdf.WriteTo(xw);//Save(xw);
+                        // xw.Flush();
+                         //xw.Close();
+                        // xw.
+
+                         ms.Position = 0;
+                         XmlReader xr = XmlReader.Create(ms);
+
+                         MemoryStream ms2 = new MemoryStream();
+                         XmlWriter xw2 = XmlWriter.Create(ms2);
+                         XmlDictionaryReader xdr2 = tempMessage.GetReaderAtBodyContents();
+
+                         XmlDocument xdoc2 = new XmlDocument();
+                         xdoc2.Load(xdr2);
+                         xdr2.Close();
+                         xdoc2.Save(xw2);
+                         xw2.Flush();
+                         xw2.Close();
+                         XmlDictionaryWriter xdw = XmlDictionaryWriter.CreateBinaryWriter(ms2);
+                         //create new message from modified XML document
+
+
+                         //BodyWriterMessage - надо конвертировать обратнов message
+                         Message newMessage = Message.CreateMessage(oldMessage.Version, null, xdw);
+                         //newMessage.Headers.CopyHeaderFrom(tempMessage, 0);
+                         //newMessage.Headers.CopyHeaderFrom(tempMessage, 1);
+                         //newMessage.Headers.CopyHeaderFrom(tempMessage, 2);
+                         newMessage.Headers.CopyHeadersFrom(oldMessage);
+                         newMessage.Headers.WriteHeaderContents(1, xw);
+                        // newMessage.WriteBody(xdw);
+                         newMessage.Properties.CopyProperties(tempMessage.Properties);
+                         //newMessage.Properties.Keys.Remove("AllowOutputBatching");
+                         //newMessage.Properties.Values.Remove("AllowOutputBatching");
+
+                        // Console.WriteLine("TransformMessage();\nNewMessage: " + newMessage.ToString());
+                        */
+
+                    oldMessage.Headers.Add(MessageHeader.CreateHeader("name_new", "", Guid.NewGuid()));
+                    return oldMessage;
+                  //  }
+                }
+                return oldMessage;
             }
         }
     }

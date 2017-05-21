@@ -48,11 +48,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RoundRobinMessageFilter.cs" />
     <Compile Include="Service.cs" />
+    <Compile Include="SimpleMessageInspector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Library\Library.csproj">

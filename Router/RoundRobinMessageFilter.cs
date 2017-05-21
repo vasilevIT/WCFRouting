@@ -91,10 +91,11 @@ namespace Router
             //выбирает случаный фильтр из списка
             public RoundRobinMessageFilter GetRandom()
             {
-                Console.WriteLine("RoundRobinGroup.GetRandom()");
+                //Console.WriteLine("RoundRobinGroup.GetRandom()");
                 try
                 {
                     int i = 0;
+                    /*
                     foreach (RoundRobinMessageFilter item in this.filters)
                     {
                         Console.WriteLine("filter[{0}] = {1}"
@@ -102,10 +103,11 @@ namespace Router
                         i++;
                     }
                     Console.WriteLine("RoundRobinGroup.GetRandom() Before get filter 0 ");
+                    */
                     Random rn = new Random();
                     RoundRobinMessageFilter next =
                         (RoundRobinMessageFilter) this.filters.ElementAt(rn.Next(0,this.filters.Count));
-                    Console.WriteLine("RoundRobinGroup.GetRandom() After get filter 0 ");
+                    //Console.WriteLine("RoundRobinGroup.GetRandom() After get filter 0 ");
                     //нужно как-то проверить, доступна ли конечная точка или нет(если нет, то удалить ее из списка и выдать новую)
                     return next;
                 }
@@ -239,7 +241,7 @@ namespace Router
 
             public bool GetMatchingFilters(Message message, ICollection<MessageFilter> results)
             {
-                Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingFilters(Message[{0}],  ICollection<MessageFilter>)",message.ToString());
+               // Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingFilters(Message[{0}],  ICollection<MessageFilter>)",message.ToString());
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
@@ -272,7 +274,7 @@ namespace Router
             //вызывается при получении сообщения
             public bool GetMatchingValue(Message message, out TFilterData value)
             {
-                Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValue(Message[{0}], out TFilterData",message.ToString());
+              //  Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValue(Message[{0}], out TFilterData",message.ToString());
                 value = default(TFilterData);
                 List<TFilterData> results = new List<TFilterData>();
                 //получаем endPoint
@@ -308,48 +310,34 @@ namespace Router
 
             public bool GetMatchingValues(Message message, ICollection<TFilterData> results)
             {
-                Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])",message.ToString(),results.GetType());
+
+                Console.WriteLine("TIME:{2} RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])"
+                    , message.GetHashCode()
+                    , results.GetHashCode()
+                    , DateTime.Now.ToString());
+
+                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 2));
+                //message.Headers.RemoveAt(0);
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
                     RoundRobinMessageFilter matchingFilter = null;
                     ServiceEndpoint endpoint = null;
-                    Random r = new Random();
                     while (this.filters.Count > 0)
                     {
-                        matchingFilter = group.GetRandom();
+                        Uri uri = Program.nt.getOptimizeHost();
                         try
                         {
-                            //выбираем хост их списка или выполняем сами
-                            if (!Program.isRouter)//если выполнить быстрее, чем пересылать
-                            {
-                                Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
-                                endpoint = this.filters[matchingFilter].ElementAt(0);
-                                endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
-                            }
-                            else
-                            {
-                                endpoint = this.filters[matchingFilter].ElementAt(0);
-                                endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
-                                /*
-                                if (r.Next(0, 2) == 0)
-                                {
-                                    endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
-                                    endpoint.Name = "point1";
-                                }
-                                else
-                                {
-                                    endpoint.Address = new EndpointAddress(new Uri("http://localhost:4000/AA"));
-                                    endpoint.Name = "point2";
-                                }
-                                */
+                            matchingFilter = GetByUri(group, uri);
+                            endpoint = this.filters[matchingFilter].ElementAt(0);
+                            //endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
 
-                                BasicHttpBinding binding = new BasicHttpBinding();
-                                ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
-                                    endpoint.Address);
-                                IInterface proxy = factory.CreateChannel();
-                                proxy.Check();
-                            }
+                            //BasicHttpBinding binding = new BasicHttpBinding();
+                            //ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
+                            //    endpoint.Address);
+                            //IInterface proxy = factory.CreateChannel();
+                            // proxy.Check();
+                            
                             break;
                         }
                         catch (Exception e)
@@ -365,19 +353,38 @@ namespace Router
                     }
                     //тут добавляем конечную точку сервиса на которую уйдет наше сообщение
                     TFilterData filter = this.filters[matchingFilter];
-                    IList<ServiceEndpoint> list = (IList<ServiceEndpoint>)filter;
+                   // IList<ServiceEndpoint> list = (IList<ServiceEndpoint>)filter;
                     //ServiceEndpoint ep = list[0];
                     //ep.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
                     //ServiceEndpoint newep = new ServiceEndpoint(new Uri("http://localhost:4000/A2"));
 
-                    list[0] = endpoint;
-                    filter = (TFilterData)list;
+                    //list[0] = endpoint;
+                    //TFilterData filter = (TFilterData)list;
                    // this.filters[matchingFilter] = (TFilterData)list;
                     results.Add(filter);
                     foundSome = true;
                 }
 
                 return foundSome;
+            }
+
+
+            //выбор оптимального хоста из группы по URI
+            public RoundRobinMessageFilter GetByUri(RoundRobinGroup group, Uri uri)
+            {
+
+                RoundRobinMessageFilter filter = null;
+                int i = 0;
+                int max = this.filters.Count;
+                while (i < max)
+                {
+                    filter = group.GetNext();
+                    if (this.filters[filter].ElementAt(0).Address.Uri == uri)
+                    {
+                        break;
+                    }
+                }
+                return filter;//this.filters[filter].ElementAt(0);
             }
 
             //add a message filter to the MessageFilterTable

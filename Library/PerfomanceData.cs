@@ -26,6 +26,8 @@ namespace Library
         {
             cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+            cpuCounter.NextValue();
+            ramCounter.NextValue();
             Console.WriteLine("PerfonamceData.PerfomanceData()");
             Console.WriteLine(this.ToString());
         }

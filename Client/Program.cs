@@ -14,19 +14,17 @@ namespace Client
         {
 
             Console.Title = "Client";
-            Uri address = new Uri("http://localhost:4000/Router");
+            Uri address = new Uri("http://192.168.1.42:4000/Router");
             BasicHttpBinding binding = new BasicHttpBinding();
             EndpointAddress endpoint = new EndpointAddress(address);
-           
-
             ChannelFactory<IInterface2> factory = new ChannelFactory<IInterface2>(binding, endpoint);
             IInterface2 proxy = factory.CreateChannel();
             Console.ReadLine();
             for (int i = 0; i < 100; i++)
             {
-                MyMessage ms = new MyMessage("*",1,3,0);
-                ms = proxy.Calculate(ms);
-                Console.WriteLine("calculate! Operation{0}, arg1= {1}, arg2 = {2}, result ={3}",ms.Operation,ms.N1, ms.N2 ,ms.Result);
+                //MyMessage ms = new MyMessage("*",1,3,0);
+                //ms = proxy.Calculate(ms);
+                //Console.WriteLine("calculate! Operation{0}, arg1= {1}, arg2 = {2}, result ={3}",ms.Operation,ms.N1, ms.N2 ,ms.Result);
                 //long n = 50;
                 //Console.WriteLine("LongSum = " + proxy.LongSum(n));
                 //Console.WriteLine("LongDiv = " + proxy.LongDiv(10));

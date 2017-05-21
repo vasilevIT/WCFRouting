@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="ContractCPU.cs" />
     <Compile Include="ContractRAM.cs" />
+    <Compile Include="CustomDispatcher.cs" />
     <Compile Include="IInterface.cs" />
     <Compile Include="Notification.cs" />
     <Compile Include="PerfomanceData.cs" />
