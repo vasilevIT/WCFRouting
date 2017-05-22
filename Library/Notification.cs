@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -14,7 +15,8 @@ namespace Library
     public class Notification
     {
         private TimeSpan interval = TimeSpan.FromSeconds(2);//sec
-        private Dictionary<Uri, PerfomanceData> dictionary; 
+        private Dictionary<Uri, PerfomanceData> dictionary;
+        private ListServers servers;
         private PerfomanceData x;
         private EndpointAddress address;
         private Random rand = new Random();
@@ -23,6 +25,7 @@ namespace Library
         public Notification()
         {
             dictionary = new Dictionary<Uri, PerfomanceData>();
+            servers = new ListServers();
             x = null;
             address = null;
             Console.WriteLine("Library.Notification()");
@@ -31,6 +34,7 @@ namespace Library
         public Notification(EndpointAddress b, PerfomanceData a)
         {
             dictionary = new Dictionary<Uri, PerfomanceData>();
+            servers = new ListServers();
             x = a;
             address = b;
             Console.WriteLine("Library.Notification(int a = {0});", x);
@@ -62,7 +66,7 @@ ProtocolType.Udp);
         private void Reciever()
         {
             UDPListener list = new UDPListener();
-            list.StartListener(ref dictionary);
+            list.StartListener(ref servers);
         }
 
         public void Run()
@@ -85,39 +89,41 @@ ProtocolType.Udp);
 
         public Uri getOptimizeHost()
         {
-            Dictionary<Uri,PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
+            return servers.GetOptimizeHost();
+            // Dictionary<Uri,PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
 
-            int n = rand.Next(0, 2);
-           // Console.WriteLine("Random.Nex(0,{0}) = {1}", 2, n);
-            int i = 0;
-            //копирование, чтобы не допустить изменения словаря во время обновления данных
-            foreach (KeyValuePair<Uri,PerfomanceData> item in dictionary)
-            {
-                tempDict.Add(item.Key,(PerfomanceData)item.Value.Clone());
-                i++;
-            }
+            // int n = rand.Next(0, 2);
+            //// Console.WriteLine("Random.Nex(0,{0}) = {1}", 2, n);
+            // int i = 0;
+            // //копирование, чтобы не допустить изменения словаря во время обновления данных
 
-            //реализация выбора хоста(пока рандом)
-            PerfomanceData pd = null;
-            IEnumerator en = tempDict.Values.GetEnumerator();
-            double min_cpu = 111;
-            Uri min_uri = null;
-            while(en.MoveNext())
-            {
-                pd = (PerfomanceData)en.Current;
-                if (min_cpu > pd.Cpu )
-                {
-                    min_cpu = pd.Cpu;
-                    min_uri = pd.Uri;
-                }
-            }
-            Console.WriteLine("geteOptimizeHost(); == {0}", tempDict[min_uri].Uri.AbsoluteUri);
-            return new Uri(tempDict[min_uri].Uri.AbsoluteUri);
-        }
+            // //сделать как-нибудь по другому, чтобы коллекция не могла измениться при копировании...
+            // Dictionary<Uri, PerfomanceData>.Enumerator enumerator = dictionary.GetEnumerator();
+            // Dictionary<Uri, PerfomanceData>.KeyCollection keys = dictionary.Keys;
+            // keys.ElementAt(0);
+            // for (int k =0;i<keys.Count;k++)
+            // {
+            //     PerfomanceData item = dictionary[keys.ElementAt(k)];
+            //     tempDict.Add(item.Uri, (PerfomanceData)item.Clone());
+            //     i++;
+            // }
 
-        private Dictionary<Uri, PerfomanceData> sortDict(ref Dictionary<Uri, PerfomanceData> tempDict)
-        {
-            return tempDict;
+            // //реализация выбора хоста(пока рандом)
+            // PerfomanceData pd = null;
+            // IEnumerator en = tempDict.Values.GetEnumerator();
+            // double min_cpu = 111;
+            // Uri min_uri = null;
+            // while(en.MoveNext())
+            // {
+            //     pd = (PerfomanceData)en.Current;
+            //     if (min_cpu > pd.Cpu )
+            //     {
+            //         min_cpu = pd.Cpu;
+            //         min_uri = pd.Uri;
+            //     }
+            // }
+            // Console.WriteLine("geteOptimizeHost(); == {0}", tempDict[min_uri].Uri.AbsoluteUri);
+            // return new Uri(tempDict[min_uri].Uri.AbsoluteUri);
         }
 
         public PerfomanceData getPerfomance()
@@ -127,48 +133,49 @@ ProtocolType.Udp);
 
         public Uri getOptimizeHostNoSelf()
         {
-            try
-            {
-                Dictionary<Uri, PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
+            return servers.GetOptimizeHost();
+            //try
+            //{
+            //    Dictionary<Uri, PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
 
-                int n = rand.Next(0, 2);
-                int i = 0;
-                //копирование, чтобы не допустить изменения словаря во время обновления данных
-                foreach (KeyValuePair<Uri, PerfomanceData> item in dictionary)
-                {
-                    if (item.Key != address.Uri)
-                    {
-                        tempDict.Add(item.Key, (PerfomanceData) item.Value.Clone());
-                    }
-                    i++;
-                }
+            //    int n = rand.Next(0, 2);
+            //    int i = 0;
+            //    //копирование, чтобы не допустить изменения словаря во время обновления данных
+            //    foreach (KeyValuePair<Uri, PerfomanceData> item in dictionary)
+            //    {
+            //        if (item.Key != address.Uri)
+            //        {
+            //            tempDict.Add(item.Key, (PerfomanceData) item.Value.Clone());
+            //        }
+            //        i++;
+            //    }
 
-                //реализация выбора хоста(пока рандом)
-                PerfomanceData pd = null;
-                IEnumerator en = tempDict.Values.GetEnumerator();
-                double min_cpu = 111;
-                Uri min_uri = null;
-                i = 0;
-                while (en.MoveNext())
-                {
-                    pd = (PerfomanceData) en.Current;
-                    Console.WriteLine(pd.ToString());
-                    if (min_cpu > pd.Cpu)
-                    {
-                        min_cpu = pd.Cpu;
-                        min_uri = pd.Uri;
-                    }
-                    i++;
-                }
+            //    //реализация выбора хоста(пока рандом)
+            //    PerfomanceData pd = null;
+            //    IEnumerator en = tempDict.Values.GetEnumerator();
+            //    double min_cpu = 111;
+            //    Uri min_uri = null;
+            //    i = 0;
+            //    while (en.MoveNext())
+            //    {
+            //        pd = (PerfomanceData) en.Current;
+            //        Console.WriteLine(pd.ToString());
+            //        if (min_cpu > pd.Cpu)
+            //        {
+            //            min_cpu = pd.Cpu;
+            //            min_uri = pd.Uri;
+            //        }
+            //        i++;
+            //    }
 
-                Console.WriteLine("geteOptimizeHostNoSelf(); == {0}", tempDict[min_uri].Uri.AbsoluteUri);
-                return new Uri(tempDict[min_uri].Uri.AbsoluteUri);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error in getOptimizeHostNoSelf(): " + e.Message);
-                return null;
-            }
+            //    Console.WriteLine("geteOptimizeHostNoSelf(); == {0}", tempDict[min_uri].Uri.AbsoluteUri);
+            //    return new Uri(tempDict[min_uri].Uri.AbsoluteUri);
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine("Error in getOptimizeHostNoSelf(): " + e.Message);
+            //    return null;
+            //}
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Library
     {
             private const int listenPort = 11000;
 
-            public void StartListener(ref Dictionary<Uri,PerfomanceData> dictionary)
+            public void StartListener(ref ListServers servers)
             {
                 bool done = false;
                 IPEndPoint localpt = new IPEndPoint(IPAddress.Any, listenPort);
@@ -40,14 +40,7 @@ namespace Library
                         groupEP.ToString(),
                         x.ToString());
                         */
-                        if (dictionary.ContainsKey(x.Uri))
-                        {
-                            dictionary[x.Uri] = x;
-                        }
-                        else
-                        {
-                            dictionary.Add(x.Uri,x);
-                        }
+                        servers.Add(x);
                     /*
                     int i = 0;
                     foreach (var item in dictionary)
@@ -57,7 +50,7 @@ namespace Library
                     }
                     Console.WriteLine();
                     */
-                }
+                    }
 
             }
                 catch (Exception e)

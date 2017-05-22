@@ -45,6 +45,7 @@
     <Compile Include="ContractRAM.cs" />
     <Compile Include="CustomDispatcher.cs" />
     <Compile Include="IInterface.cs" />
+    <Compile Include="ListServers.cs" />
     <Compile Include="Notification.cs" />
     <Compile Include="PerfomanceData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

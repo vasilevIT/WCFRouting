@@ -316,7 +316,7 @@ namespace Router
                     , results.GetHashCode()
                     , DateTime.Now.ToString());
 
-                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 2));
+                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 1));
                 //message.Headers.RemoveAt(0);
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)

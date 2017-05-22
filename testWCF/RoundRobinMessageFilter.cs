@@ -351,6 +351,7 @@ namespace testWCF
                             {
                                 if (TTL < 1)
                                 {
+                                    Program.nt.getPerfomance().CountTask++;
                                     Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
                                     Uri uri_self = Program.nt.getPerfomance().Uri;
                                     uri_self = new Uri(uri_self.AbsoluteUri.Replace("Router",""));

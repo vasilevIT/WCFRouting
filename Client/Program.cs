@@ -22,15 +22,18 @@ namespace Client
             Console.ReadLine();
             for (int i = 0; i < 100; i++)
             {
-                //MyMessage ms = new MyMessage("*",1,3,0);
-                //ms = proxy.Calculate(ms);
-                //Console.WriteLine("calculate! Operation{0}, arg1= {1}, arg2 = {2}, result ={3}",ms.Operation,ms.N1, ms.N2 ,ms.Result);
                 //long n = 50;
                 //Console.WriteLine("LongSum = " + proxy.LongSum(n));
                 //Console.WriteLine("LongDiv = " + proxy.LongDiv(10));
                 //proxy.createBigCollection(50);
                 //Console.WriteLine("BigCollection()");
-                Console.WriteLine("getHostName() = {0}", proxy.getHostName());
+                Task<String> task = CallServiceAsync(proxy);
+                var awaiter = task.GetAwaiter();
+                awaiter.OnCompleted(() => // Продолжение
+                {
+                    String result = awaiter.GetResult();
+                    Console.WriteLine(result); // 116
+                }); ;
                 Console.WriteLine("Продолжить?");
                 String str = Console.ReadLine();
                 if (str.Equals("n"))
@@ -43,6 +46,16 @@ namespace Client
 
 
        
+        }
+        public static Task<String> CallServiceAsync(IInterface2 proxy)
+        {
+            return Task.Run(() => CallService(proxy));
+        }
+
+        public static String CallService(IInterface2 proxy)
+        {
+            Random r = new Random();
+            return "LongSum:" + proxy.LongSum(800+r.Next(100)).ToString();
         }
     }
 }
