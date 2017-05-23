@@ -83,7 +83,7 @@ namespace testWCF
             //get the next filter that will match.
             public RoundRobinMessageFilter GetNext()
             {
-                Console.WriteLine("RoundRobinGroup.GetNext()");
+               // Console.WriteLine("RoundRobinGroup.GetNext()");
                 this.EnsureEnumerator();
                 RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.currentPosition.Current;
                 this.AdvanceEnumerator();
@@ -142,7 +142,7 @@ namespace testWCF
 
             private void EnsureEnumerator()
             {
-                Console.WriteLine("RoundRobinGroup.EnsureEnumerator()");
+               // Console.WriteLine("RoundRobinGroup.EnsureEnumerator()");
                 if (this.currentPosition == null)
                 {
                     this.currentPosition = filters.GetEnumerator();
@@ -152,7 +152,7 @@ namespace testWCF
 
             private void AdvanceEnumerator()
             {
-                Console.WriteLine("RoundRobinGroup.AdvanceEnumerator()");
+               // Console.WriteLine("RoundRobinGroup.AdvanceEnumerator()");
                 if (!this.currentPosition.MoveNext())
                 {
                     //Reached the end, clear the enumerator
@@ -346,49 +346,41 @@ namespace testWCF
                        // matchingFilter = group.GetNext();
                         try
                         {
+                            Program.nt.getPerfomance().Initilization();
+                            PerfomanceData optimize_host = Program.nt.getOptimizeHostNoSelf();
                             //выбираем хост их списка или выполняем сами
-                            if (!Program.isRouter)//если выполнить быстрее, чем пересылать
+                            //если выполнить быстрее, чем пересылать
+                            Console.WriteLine("This Host:{0}", Program.nt.getPerfomance().ToString());
+                            if (optimize_host != null)
                             {
-                                if (TTL < 1)
+                                Console.WriteLine("Optimize Host:{0}", optimize_host.ToString());
+                            }
+                            else
+                            {
+                                Console.WriteLine("Optimize Host: ==SELF== {0}", Program.nt.getPerfomance().Uri.ToString());
+                            }
+                            if ((TTL > 0) && (optimize_host != null) && ((optimize_host.Cpu<Program.nt.getPerfomance().Cpu)))
+                            {
+                                Uri uri = optimize_host.Uri;
+                                if (uri != null)
                                 {
-                                    Program.nt.getPerfomance().CountTask++;
-                                    Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
-                                    Uri uri_self = Program.nt.getPerfomance().Uri;
-                                    uri_self = new Uri(uri_self.AbsoluteUri.Replace("Router",""));
-                                    matchingFilter = GetByUri(group, uri_self);
+                                    matchingFilter = GetByUri(group, uri);
                                     endpoint = this.filters[matchingFilter].ElementAt(0);
-
                                     BasicHttpBinding binding = new BasicHttpBinding();
                                     ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
                                         endpoint.Address);
                                     IInterface proxy = factory.CreateChannel();
-                                     proxy.Check();
-                                }
-                                else
-                                {
-                                    Uri uri = Program.nt.getOptimizeHostNoSelf();
-                                    if (uri != null)
-                                    {
-                                        matchingFilter = GetByUri(group, uri);
-                                        endpoint = this.filters[matchingFilter].ElementAt(0);
-                                        BasicHttpBinding binding = new BasicHttpBinding();
-                                        ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
-                                            endpoint.Address);
-                                        IInterface proxy = factory.CreateChannel();
-                                       // proxy.Check();
-                                    }
+                                   // proxy.Check();
                                 }
                             }
                             else
                             {
-                                Uri uri = Program.nt.getOptimizeHost();
-                                matchingFilter = GetByUri(group, uri);
+                                Program.nt.getPerfomance().CountTask++;
+                                Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
+                                Uri uri_self = Program.nt.getPerfomance().Uri;
+                                uri_self = new Uri(uri_self.AbsoluteUri.Replace("Router", ""));
+                                matchingFilter = GetByUri(group, uri_self);
                                 endpoint = this.filters[matchingFilter].ElementAt(0);
-                                BasicHttpBinding binding = new BasicHttpBinding();
-                                ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
-                                    endpoint.Address);
-                                IInterface proxy = factory.CreateChannel();
-                               // proxy.Check();
                             }
                             break;
                         }

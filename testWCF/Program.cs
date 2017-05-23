@@ -13,6 +13,7 @@ namespace testWCF
     {
         public static Notification nt;
         public static bool isRouter = false;
+        public static EndpointAddress address = null;
         static void Main(string[] args)
         {
             Console.Title = "Server";
@@ -37,7 +38,7 @@ namespace testWCF
                 Console.ReadKey();
             }
  
-            EndpointAddress address = routing_host.Description.Endpoints[0].Address;
+            address = routing_host.Description.Endpoints[0].Address;
 
             PerfomanceData pr = new PerfomanceData();
             pr.Initilization(address);

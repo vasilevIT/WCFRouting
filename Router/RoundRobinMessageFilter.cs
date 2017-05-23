@@ -316,7 +316,7 @@ namespace Router
                     , results.GetHashCode()
                     , DateTime.Now.ToString());
 
-                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 1));
+                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 2));
                 //message.Headers.RemoveAt(0);
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
@@ -325,18 +325,18 @@ namespace Router
                     ServiceEndpoint endpoint = null;
                     while (this.filters.Count > 0)
                     {
-                        Uri uri = Program.nt.getOptimizeHost();
+                        Uri uri = Program.nt.getOptimizeHost().Uri;
+                        Console.WriteLine("Optimize Host:{0}",uri.ToString());
                         try
                         {
                             matchingFilter = GetByUri(group, uri);
                             endpoint = this.filters[matchingFilter].ElementAt(0);
-                            //endpoint.Address = new EndpointAddress(Program.nt.getOptimizeHost());
 
-                            //BasicHttpBinding binding = new BasicHttpBinding();
-                            //ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
-                            //    endpoint.Address);
-                            //IInterface proxy = factory.CreateChannel();
-                            // proxy.Check();
+                            BasicHttpBinding binding = new BasicHttpBinding();
+                            ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
+                                endpoint.Address);
+                            IInterface proxy = factory.CreateChannel();
+                           //  proxy.Check();
                             
                             break;
                         }
@@ -344,6 +344,7 @@ namespace Router
                         {
                             Console.WriteLine("Конечная точка не  доступна. " + e.Message);
                           //  this.filters.Remove(matchingFilter);//удаляем точку
+                            Program.nt.getDictionary().Remove(uri);
                             continue;
                         }
                     }
@@ -353,14 +354,6 @@ namespace Router
                     }
                     //тут добавляем конечную точку сервиса на которую уйдет наше сообщение
                     TFilterData filter = this.filters[matchingFilter];
-                   // IList<ServiceEndpoint> list = (IList<ServiceEndpoint>)filter;
-                    //ServiceEndpoint ep = list[0];
-                    //ep.Address = new EndpointAddress(new Uri("http://localhost:4000/A2"));
-                    //ServiceEndpoint newep = new ServiceEndpoint(new Uri("http://localhost:4000/A2"));
-
-                    //list[0] = endpoint;
-                    //TFilterData filter = (TFilterData)list;
-                   // this.filters[matchingFilter] = (TFilterData)list;
                     results.Add(filter);
                     foundSome = true;
                 }

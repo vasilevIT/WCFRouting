@@ -75,8 +75,8 @@ namespace Library
             //
            // servers.Sort(CompareServers);
 
-            PrintServers();
-            Console.WriteLine("BeforeSort");
+          //  PrintServers();
+           // Console.WriteLine("BeforeSort");
             //пока только по CPU
             int[] weights = new int[servers.Count];
             List<PerfomanceData> list_pareto = new List<PerfomanceData>();
@@ -90,7 +90,7 @@ namespace Library
                     //можно добавить весовые коэффициенты для параметра CPU и RAM, т.к. они не равнозначны
                     if ((i!=j) 
                         && (servers[i].Cpu > servers[j].Cpu) 
-                        && (servers[i].Ram < servers[j].Ram))
+                       /* && (servers[i].Ram < servers[j].Ram)*/)
                     {
                         weights[i]++;
                     }
@@ -115,8 +115,8 @@ namespace Library
             list_pareto.AddRange(list_pareto_bad_more);
             this.servers = list_pareto;
             this.Sorted = true;
-            PrintServers();
-            Console.WriteLine("AfterSort");
+           // PrintServers();
+           // Console.WriteLine("AfterSort");
         }
 
         private void PrintServers()
@@ -134,13 +134,29 @@ namespace Library
             servers.Clear();
         }
 
-        public Uri GetOptimizeHost()
+        public PerfomanceData GetOptimizeHost()
         {
             if (!this.Sorted)
             {
                 this.Sort();
             }
-            return this.servers.First().Uri;
+            return this.servers.First();
+        }
+
+        public PerfomanceData GetOptimizeHostNoSelf(PerfomanceData pd)
+        {
+            if (!this.Sorted)
+            {
+                this.Sort();
+            }
+            for (int i = 0; i < this.servers.Count; i++)
+            {
+                if (this.servers[i].Uri.ToString() != pd.Uri.ToString())
+                {
+                    return this.servers[i];
+                }
+            }
+            return null;
         }
     }
 }

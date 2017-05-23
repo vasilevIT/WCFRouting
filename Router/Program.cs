@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.ServiceModel;
@@ -20,7 +21,8 @@ namespace Router
         static void Main(string[] args)
         {
            Console.Title = "Router";
-        ServiceHost host = new ServiceHost(typeof(RoutingService));
+
+            ServiceHost host = new ServiceHost(typeof(RoutingService));
 
            try
            {
@@ -33,9 +35,7 @@ namespace Router
                host.Abort();
                Console.ReadKey();
            }
-
-            ServiceHost host_staff = new ServiceHost(typeof(RouterService));
-            host_staff.Open();
+            
 
             EndpointAddress address = host.Description.Endpoints[0].Address;
 
@@ -47,7 +47,6 @@ namespace Router
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
             Console.ReadKey();
             host.Close();
-            host_staff.Close();
         }
           static void PrintServiceInfo(ServiceHost host)
         {

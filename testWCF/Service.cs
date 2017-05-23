@@ -103,7 +103,7 @@ namespace testWCF
             }
             Thread.Sleep(TimeSpan.FromSeconds(2));//ждем, чтобы объекты немного пожили в памяти
             float x2 = cpuCounter.NextValue();
-            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
+            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB\n{2}", x2, ramCounter.NextValue(),this.getHostName());
             Program.nt.getPerfomance().CountTask--;
 
         }

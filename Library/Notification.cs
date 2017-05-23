@@ -87,7 +87,7 @@ ProtocolType.Udp);
             return dictionary;
         }
 
-        public Uri getOptimizeHost()
+        public PerfomanceData getOptimizeHost()
         {
             return servers.GetOptimizeHost();
             // Dictionary<Uri,PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();
@@ -131,9 +131,9 @@ ProtocolType.Udp);
             return x;
         }
 
-        public Uri getOptimizeHostNoSelf()
+        public PerfomanceData getOptimizeHostNoSelf()
         {
-            return servers.GetOptimizeHost();
+            return servers.GetOptimizeHostNoSelf(this.x);
             //try
             //{
             //    Dictionary<Uri, PerfomanceData> tempDict = new Dictionary<Uri, PerfomanceData>();

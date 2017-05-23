@@ -68,13 +68,14 @@ namespace Library
         }
 
 
+        public void Initilization()
+        {
+            cpu = cpuCounter.NextValue();
+            ram = ramCounter.NextValue();
+        }
+
         public void Initilization(EndpointAddress address)
         {
-            String strHostName = string.Empty;
-            strHostName = Dns.GetHostName();
-           // Console.WriteLine("Local Machine's Host Name: " + strHostName);
-            IPHostEntry ipEntry = Dns.GetHostEntry(strHostName);
-            IPAddress[] addr = ipEntry.AddressList;
             cpu = cpuCounter.NextValue();
             ram = ramCounter.NextValue();
             uri = address.Uri;
