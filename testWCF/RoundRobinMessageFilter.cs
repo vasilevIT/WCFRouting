@@ -343,7 +343,6 @@ namespace testWCF
                     Random r = new Random();
                     while (this.filters.Count > 0)
                     {
-                       // matchingFilter = group.GetNext();
                         try
                         {
                             Program.nt.getPerfomance().Initilization();
@@ -351,21 +350,25 @@ namespace testWCF
                             //выбираем хост их списка или выполняем сами
                             //если выполнить быстрее, чем пересылать
                             Console.WriteLine("This Host:{0}", Program.nt.getPerfomance().ToString());
+                            /*
                             if (optimize_host != null)
-                            {
-                                Console.WriteLine("Optimize Host:{0}", optimize_host.ToString());
-                            }
+                            { Console.WriteLine("Optimize Host:{0}", optimize_host.ToString());}
                             else
-                            {
-                                Console.WriteLine("Optimize Host: ==SELF== {0}", Program.nt.getPerfomance().Uri.ToString());
-                            }
-                            if ((TTL > 0) && (optimize_host != null) && ((optimize_host.Cpu<Program.nt.getPerfomance().Cpu)))
+                            { Console.WriteLine("Optimize Host: ==SELF== {0}", Program.nt.getPerfomance().Uri.ToString()); }
+                            */
+                            if ((TTL > 0)
+                                && (optimize_host != null)
+                                && ((optimize_host.Cpu<Program.nt.getPerfomance().Cpu)
+                                    || (optimize_host.Ram < Program.nt.getPerfomance().Ram))
+                                )
                             {
                                 Uri uri = optimize_host.Uri;
                                 if (uri != null)
                                 {
                                     matchingFilter = GetByUri(group, uri);
                                     endpoint = this.filters[matchingFilter].ElementAt(0);
+
+                                    //проверка доступности
                                     BasicHttpBinding binding = new BasicHttpBinding();
                                     ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
                                         endpoint.Address);
@@ -376,10 +379,12 @@ namespace testWCF
                             else
                             {
                                 Program.nt.getPerfomance().CountTask++;
-                                Console.WriteLine("Routing inside host() " + Program.nt.getPerfomance().Uri);
                                 Uri uri_self = Program.nt.getPerfomance().Uri;
-                                uri_self = new Uri(uri_self.AbsoluteUri.Replace("Router", ""));
+                                string str = uri_self.AbsoluteUri.Replace("Router", "");
+                                uri_self = new Uri(str);
                                 matchingFilter = GetByUri(group, uri_self);
+                                Console.WriteLine("Routing inside host() :  " + str);
+                                Console.WriteLine("this.PerfomanceData = " + Program.nt.getPerfomance().ToString());
                                 endpoint = this.filters[matchingFilter].ElementAt(0);
                             }
                             break;

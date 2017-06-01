@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Routing;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Library;
 
@@ -14,15 +16,18 @@ namespace testWCF
         public static Notification nt;
         public static bool isRouter = false;
         public static EndpointAddress address = null;
+
+        public static System.Configuration.Configuration config =
+            ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
         static void Main(string[] args)
         {
+
+            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 10);
+           // ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
+            System.Net.ServicePointManager.DefaultConnectionLimit = 10;
             Console.Title = "Server";
-          /*  Uri address = new Uri("http://127.0.0.1:4000/A");
-            BasicHttpBinding binding = new BasicHttpBinding();
-            Type contract = typeof(IInterface2);
-*/
             ServiceHost host = new ServiceHost(typeof(Service));
-//            host.AddServiceEndpoint(contract, binding, address);
             host.Open();
             
             ServiceHost routing_host = new ServiceHost(typeof(RoutingService));

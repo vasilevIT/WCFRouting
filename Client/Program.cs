@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.ServiceModel;
@@ -12,38 +13,44 @@ namespace Client
 {
     class Program
     {
+        private static System.Configuration.Configuration config =
+            ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
         static void Main(string[] args)
         {
-
+            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 10);
+            ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
             Console.Title = "Client";
-            Uri address = new Uri("http://192.168.1.42:4000/Router");
-            BasicHttpBinding binding = new BasicHttpBinding();
-            EndpointAddress endpoint = new EndpointAddress(address);
-            ChannelFactory<IInterface2> factory = new ChannelFactory<IInterface2>(binding, endpoint);
-            IInterface2 proxy = factory.CreateChannel();
             Console.ReadLine();
             String str;
             for (int i = 0; i < 100; i++)
             {
-                //long n = 50;
-                //Console.WriteLine("LongSum = " + proxy.LongSum(n));
-                //Console.WriteLine("LongDiv = " + proxy.LongDiv(10));
-                //proxy.createBigCollection(50);
-                //Console.WriteLine("BigCollection()");
-                
-                Task<String> task = CallServiceAsync(proxy);
+                // Task<String> task = CallServiceAsync(proxy);
+
+                if (true)
+                {
+                    Task.Run(() => CallService("sum"));
+                }
+                else
+                {
+                    Task.Run(() => CallService("collection"));
+                }
+
+                /*
                 var awaiter = task.GetAwaiter();
                 awaiter.OnCompleted(() => // Продолжение
                 {
                     String result = awaiter.GetResult();
                     Console.WriteLine(result); // 116
                 }); ;
+                */
                 Console.WriteLine("Продолжить?");
                 str = Console.ReadLine();
                 if (str.Equals("n"))
                 {
-                    break;
-                }
+                   break;
+               }
+              //  factory.Close();
+                
                 /*
 
                 Task<String> task2 = CallServiceAsync2(proxy);
@@ -72,17 +79,32 @@ namespace Client
         {
             return Task.Run(() => proxy.getHostName());
         }
-        public static Task<String> CallServiceAsync(IInterface2 proxy)
-        {
-            return Task.Run(() => CallService(proxy));
-        }
+        //public static Task<String> CallServiceAsync(IInterface2 proxy)
+        //{
+         //   return Task.Run(() => CallService(proxy));
+        //}
 
-        public static String CallService(IInterface2 proxy)
+        public static void CallService(string method)
         {
+
+            Uri address = new Uri(config.AppSettings.Settings["router"].Value);
+            BasicHttpBinding binding = new BasicHttpBinding();
+            EndpointAddress endpoint = new EndpointAddress(address);
+            ChannelFactory<IInterface2> factory = new ChannelFactory<IInterface2>(binding, endpoint);
+            IInterface2 proxy = factory.CreateChannel();
+            Console.WriteLine("call async method: {0}", Thread.CurrentThread);
             Random r = new Random();
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            String str = proxy.LongSum(800 + r.Next(100)).ToString();
+            String str = "";
+            if (method == "sum")
+            {
+                str = proxy.LongSum(500 + r.Next(100)).ToString();
+            }
+            else
+            {
+                str = proxy.createBigCollection(500+r.Next(100));
+            }
             stopWatch.Stop();
             // Get the elapsed time as a TimeSpan value.
             TimeSpan ts = stopWatch.Elapsed;
@@ -92,7 +114,7 @@ namespace Client
                 ts.Hours, ts.Minutes, ts.Seconds,
                 ts.Milliseconds / 10);
 
-            return "LongSum:" + str + "\n" + "Время выполнения " + elapsedTime;
+            Console.WriteLine("LongSum:" + str + "\n" + "Время выполнения " + elapsedTime);
         }
     }
 }

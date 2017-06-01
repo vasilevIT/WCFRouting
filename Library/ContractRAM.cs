@@ -11,6 +11,6 @@ namespace Library
     public interface ContractRAM
     {
         [OperationContract]
-        void createBigCollection(int N);
+        string createBigCollection(int N);
     }
 }

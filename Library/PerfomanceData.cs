@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Net;
+using System.Management;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Library
 {
@@ -16,7 +12,9 @@ namespace Library
         private double ram;
         private int count_task;
         private Uri uri;
-        private string type;
+        private TaskInfo[] taskInfo = new TaskInfo[]{new TaskInfo(0), new TaskInfo(1)};//2 типа задач
+        public ulong totalRam = 0;
+
         [NonSerialized]
         private PerformanceCounter cpuCounter;
         [NonSerialized]
@@ -55,16 +53,14 @@ namespace Library
             get { return uri; }
             set { uri = value; }
         }
-
-        public string Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
+        
 
         public override string ToString()
         {
-            return $"cpu: {cpu}, ram: {ram}, count_task: {count_task}, uri: {uri}, type: {type}";
+            return $"cpu: {cpu}, ram: {ram}, count_task: {count_task}, uri: {uri}\n"
+                +"average_cpu: "+taskInfo[0].average_cpu+", average_ram: "+taskInfo[0].average_ram+", average_time: "
+                +taskInfo[0].average_time
+                +"\nPerfomanceIndex: " + this.getPerfomanceIndex(0);
         }
 
 
@@ -76,10 +72,78 @@ namespace Library
 
         public void Initilization(EndpointAddress address)
         {
+
+            ManagementObjectSearcher ramMonitor = 
+                new ManagementObjectSearcher("SELECT TotalVisibleMemorySize FROM Win32_OperatingSystem");
+
+            foreach (ManagementObject objram in ramMonitor.Get())
+            {
+                this.totalRam = Convert.ToUInt64(objram["TotalVisibleMemorySize"])/1000;
+            }
             cpu = cpuCounter.NextValue();
             ram = ramCounter.NextValue();
             uri = address.Uri;
 
+        }
+
+        /*
+         * обновляет отметку о среднем времени выполнения задачи 
+         * определенного типа 
+         * 0 - вычислительная задача
+         * 1 - создание коллекции
+         * 2 - отправка/скачивание данных
+         * 
+         * на текущем хосте
+         */
+        public void UpdateTimeStamp(TimeSpan ts, int type_task)
+        {
+           this.taskInfo[type_task].average_time =  ts.Seconds;
+        }
+
+        public void UpdateArgs(int N, int type_task)
+        {
+           this.taskInfo[type_task].average_args = N;
+        }
+
+        public void UpdateCpu(double cpu, int type_task)
+        {
+            this.taskInfo[type_task].average_cpu = cpu;
+        }
+
+        public void UpdateRam(double ram,int type_task)
+        {
+            this.taskInfo[type_task].average_ram = ram;
+        }
+
+        public void UpdateAvg(int type_task)
+        {
+            if (type_task >= 0 && type_task
+                <= 2)
+            {
+                //UpdateCpu(type_task);
+                //UpdateRam(type_task);
+            }
+        }
+
+        public double getPerfomanceIndex(int type_task)
+        {
+            if ((type_task >= 0) && (type_task <= 2) && (totalRam > 0))
+            {
+                return ((taskInfo[type_task].average_cpu / 100) + (taskInfo[type_task].average_ram / totalRam) + 5/taskInfo[type_task].average_time) /3;
+            }
+            return 0;
+        }
+
+        public double calcPrognoseTime()
+        {
+            /*
+             * Предлагаю сделать биленейную интерполяцию по 3 точкам
+             * CPU,RAM,TIME
+             * (0,0,3.5); // 3.5 - минимальное возможное время выполнения задачи(можно посчитать вручную на листочке)
+             * (average_cpu,average_ram,average_time);
+             * (1,1,timeout) // где timeout - максимальное возможное время выполнения(1000 секунд, например), но лучше взять секунд 30
+             */
+            return 5;//secund
         }
 
         public object Clone()
@@ -89,8 +153,19 @@ namespace Library
             clon.CountTask = this.CountTask;
             clon.Cpu = this.Cpu;
             clon.Ram = this.Ram;
-            clon.Type = this.Type;
             return (object) clon;
+        }
+
+        public double getAverageTime(int i)
+        {
+           return this.taskInfo[i].average_time;
+        }
+
+        public TaskInfo getTaskInfo(int i)
+        {
+            if (i<taskInfo.Length)
+                return taskInfo[i];
+            return null;
         }
     }
 }

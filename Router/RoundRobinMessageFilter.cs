@@ -10,6 +10,8 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Description;
 using System.ServiceModel;
+using System.Threading;
+using System.Xml;
 using Library;
 
 
@@ -81,7 +83,7 @@ namespace Router
             //get the next filter that will match.
             public RoundRobinMessageFilter GetNext()
             {
-                Console.WriteLine("RoundRobinGroup.GetNext()");
+               // Console.WriteLine("RoundRobinGroup.GetNext()");
                 this.EnsureEnumerator();
                 RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.currentPosition.Current;
                 this.AdvanceEnumerator();
@@ -123,7 +125,7 @@ namespace Router
             public RoundRobinMessageFilter GetOptimize()
             {
                 //пока случайная реализация
-                Console.WriteLine("RoundRobinGroup.GetOptimize()");
+               // Console.WriteLine("RoundRobinGroup.GetOptimize()");
                 //получаем список всех хостов с данными о их производительности
                 Dictionary<Uri, PerfomanceData> dictionary = Router.Program.nt.getDictionary();
                 //вычисляем наиболее оптимальный хост для обработки задачи
@@ -139,7 +141,7 @@ namespace Router
 
             private void EnsureEnumerator()
             {
-                Console.WriteLine("RoundRobinGroup.EnsureEnumerator()");
+               // Console.WriteLine("RoundRobinGroup.EnsureEnumerator()");
                 if (this.currentPosition == null)
                 {
                     this.currentPosition = filters.GetEnumerator();
@@ -149,7 +151,7 @@ namespace Router
 
             private void AdvanceEnumerator()
             {
-                Console.WriteLine("RoundRobinGroup.AdvanceEnumerator()");
+               // Console.WriteLine("RoundRobinGroup.AdvanceEnumerator()");
                 if (!this.currentPosition.MoveNext())
                 {
                     //Reached the end, clear the enumerator
@@ -312,11 +314,41 @@ namespace Router
             {
 
                 Console.WriteLine("TIME:{2} RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])"
-                    , message.GetHashCode()
+                    , message.ToString()
                     , results.GetHashCode()
                     , DateTime.Now.ToString());
+                Console.WriteLine("Thread.Hashcode(): {0} ", Thread.CurrentThread.GetHashCode() );
+                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 1));
 
-                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 2));
+                //определяем тип задачи
+                int N = 0,
+                task_type = 0;
+                XmlDocument xml = new XmlDocument();
+                xml.LoadXml(message.ToString());
+                XmlNamespaceManager manager = new XmlNamespaceManager(xml.NameTable);
+                manager.AddNamespace("s", "http://schemas.xmlsoap.org/soap/envelope/");
+                XmlNode xn = xml.SelectSingleNode("//s:Body", manager);
+                if (xn != null)
+                {
+                    string firstName = xn.InnerText; // arg N
+                    XmlNode method = xn.LastChild;
+                    XmlNode childNode = xn.FirstChild; //arg N
+                    if (method.Name == "LongSum")
+                    {
+                        task_type = 0;
+                    }
+                    else if (method.Name == "createBigCollection")
+                    {
+                        task_type = 1;
+                    }
+                    else
+                    {
+                        task_type = -1;
+                    }
+                    N = Int32.Parse(childNode.InnerText);
+                    Console.WriteLine("method = {0}", method.Name);
+                    Console.WriteLine("N = {0}", childNode.InnerText);
+                }
                 //message.Headers.RemoveAt(0);
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
@@ -325,12 +357,39 @@ namespace Router
                     ServiceEndpoint endpoint = null;
                     while (this.filters.Count > 0)
                     {
-                        Uri uri = Program.nt.getOptimizeHost().Uri;
+                        PerfomanceData host = Program.nt.calcServerIndexes(Program.tasks, task_type); //Program.nt.getOptimizeHost();
+                        Uri uri = host.Uri;
                         Console.WriteLine("Optimize Host:{0}",uri.ToString());
                         try
                         {
                             matchingFilter = GetByUri(group, uri);
                             endpoint = this.filters[matchingFilter].ElementAt(0);
+                            
+
+                            CustomTask ct = new CustomTask(TimeSpan.FromSeconds(host.getAverageTime(task_type)), task_type, host.Uri);
+                            ct.taskInfo = host.getTaskInfo(task_type);
+                            double k = 0;
+                            if (ct.taskInfo.average_args > 0)
+                            {
+                               k = ct.taskInfo.average_time/ct.taskInfo.average_args;
+                                // коэффициент  роста времени от размера входных данных
+                                double add_sec = (N - ct.taskInfo.average_args) * k;
+                                double power = 1.0/3.0;
+                                if (add_sec < 0)
+                                {
+                                    add_sec = -Math.Pow(Math.Abs(add_sec), power);
+                                }
+                                else
+                                {
+                                    add_sec = Math.Pow(add_sec, power);
+                                }
+                                ct.taskInfo.addSomeSeconds(add_sec);// увеличили или уменьшили время выполнения задачи
+
+                            }
+                            Program.tasks.Add(ct);
+                           // List<CustomTask> list = Program.getTasksByServer(uri,task_type);
+                           //Program.nt.calcServerIndexes(Program.tasks,task_type);//Program.getServerIndex(list);
+                           //Program.printTasks(list);
 
                             BasicHttpBinding binding = new BasicHttpBinding();
                             ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,

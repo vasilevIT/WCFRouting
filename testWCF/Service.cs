@@ -7,10 +7,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Library;
+using Router;
 
 namespace testWCF
 {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerSession)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall,ConcurrencyMode = ConcurrencyMode.Multiple)]
     class Service : IInterface2 , IDisposable , ContractCPU, ContractRAM
     {
 
@@ -19,6 +20,7 @@ namespace testWCF
 
         public Service()
         {
+            Console.WriteLine("Service()");
             cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             ramCounter = new PerformanceCounter("Memory", "Available MBytes");
         }
@@ -51,21 +53,52 @@ namespace testWCF
 
         public long LongSum(long N)
         {
-            float x1 = cpuCounter.NextValue();
+            Console.WriteLine("LongSum();");
             long sum = 0;
-            for (int i = 0; i < N; i++)
+            try
             {
-                for (int j = 0; j < N; j++)
+                Guid task_guid = Guid.NewGuid();
+                setTaskGuid(0, Program.nt.getPerfomance().Uri, task_guid);
+                Program.nt.getPerfomance().UpdateAvg(0);
+                Program.nt.getPerfomance().UpdateArgs(Convert.ToInt32(N), 0);
+
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+                float x1 = cpuCounter.NextValue();
+                float y1 = ramCounter.NextValue();
+                for (int i = 0; i < N; i++)
                 {
-                    for (int k = 0; k < N; k++)
+                    Thread.Sleep(TimeSpan.FromMilliseconds(5));
+                    for (int j = 0; j < N; j++)
                     {
-                        sum = sum + i*(j ^ i) + k;
+                        for (int k = 0; k < N; k++)
+                        {
+
+                            sum = sum + i*(j ^ i) + k;
+                        }
                     }
                 }
+                float x2 = cpuCounter.NextValue() - x1;
+                float y2 = y1 - ramCounter.NextValue();
+                stopWatch.Stop();
+                Program.nt.getPerfomance().UpdateCpu(x2, 0);
+                Program.nt.getPerfomance().UpdateRam(y2, 0);
+                Program.nt.getPerfomance().UpdateTimeStamp(stopWatch.Elapsed, 0);
+                TimeSpan ts = stopWatch.Elapsed;
+                string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    ts.Hours, ts.Minutes, ts.Seconds,
+                    ts.Milliseconds/10);
+
+                completeTask(task_guid);
+                Program.nt.getPerfomance().CountTask--;
+                Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB, time: {2}", x2, ramCounter.NextValue(),
+                    elapsedTime);
+                // Program.nt.getPerfomance().CountTask--;
             }
-            float x2 = cpuCounter.NextValue();
-            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
-            Program.nt.getPerfomance().CountTask--;
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
             return sum;
         }
 
@@ -87,24 +120,59 @@ namespace testWCF
             float x2 = cpuCounter.NextValue();
             Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
             Program.nt.getPerfomance().CountTask--;
+           // completeTask();
             return result;
         }
 
-        public void createBigCollection(int N)
+        public string createBigCollection(int N)
         {
+            Guid task_guid = Guid.NewGuid();
+            setTaskGuid(0, Program.nt.getPerfomance().Uri, task_guid);
+            Console.WriteLine("createBigCollection();");
+            Program.nt.getPerfomance().UpdateAvg(1);
+            Program.nt.getPerfomance().UpdateArgs(Convert.ToInt32(N), 1);
+
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             float x1 = cpuCounter.NextValue();
+            float y1 = ramCounter.NextValue();
             List<double> list_double = new List<double>();
             List<String> list_string = new List<String>();
             Random r = new Random();
+            String hash = this.GetHashCode().ToString();
+            for (int i = 0; i < 5; i++)
+            {
+
+                hash += hash;
+            }
             for (int i = 0; i < N; i++)
             {
+                Thread.Sleep(TimeSpan.FromMilliseconds(20));
+                for (int j = 0; j < N; j++)
+                {
                 list_double.Add(r.NextDouble());
-                list_string.Add(r.NextDouble().GetHashCode().ToString());
+                list_string.Add(r.NextDouble().GetHashCode().ToString()
+                    +hash
+                    );
+                }
             }
             Thread.Sleep(TimeSpan.FromSeconds(2));//ждем, чтобы объекты немного пожили в памяти
-            float x2 = cpuCounter.NextValue();
-            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB\n{2}", x2, ramCounter.NextValue(),this.getHostName());
+
+            float x2 = cpuCounter.NextValue() - x1;
+            float y2 = y1-ramCounter.NextValue();
+            stopWatch.Stop();
+            Program.nt.getPerfomance().UpdateCpu(x2, 1);
+            Program.nt.getPerfomance().UpdateRam(y2, 1);
+            Program.nt.getPerfomance().UpdateTimeStamp(stopWatch.Elapsed, 1);
+            TimeSpan ts = stopWatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                ts.Hours, ts.Minutes, ts.Seconds,
+                ts.Milliseconds / 10);
+            string result = String.Format("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB\nTime: {2}", x2, ramCounter.NextValue(),elapsedTime);
+            Console.WriteLine(result);
             Program.nt.getPerfomance().CountTask--;
+            completeTask(task_guid);
+            return result;
 
         }
 
@@ -147,6 +215,25 @@ namespace testWCF
         {
             Console.WriteLine("\n\ngetHostName();=== {1} === this.GetHashCode() = {0}", this.GetHashCode(), Program.nt.getPerfomance().Uri.ToString());
             return Program.nt.getPerfomance().Uri.ToString() + " " + this.GetHashCode();
+        }
+
+        private void setTaskGuid(int task_type,Uri server,Guid guid)
+        {
+            Uri address = new Uri(Program.config.AppSettings.Settings["routerService"].Value);
+            BasicHttpBinding binding = new BasicHttpBinding();
+            EndpointAddress endpoint = new EndpointAddress(address);
+            ChannelFactory<IRouterService> factory = new ChannelFactory<IRouterService>(binding, endpoint);
+            IRouterService proxy = factory.CreateChannel();
+            proxy.setGuid(task_type, server, guid);
+        }
+        private void completeTask(Guid guid)
+        {
+            Uri address = new Uri(Program.config.AppSettings.Settings["routerService"].Value);
+            BasicHttpBinding binding = new BasicHttpBinding();
+            EndpointAddress endpoint = new EndpointAddress(address);
+            ChannelFactory<IRouterService> factory = new ChannelFactory<IRouterService>(binding, endpoint);
+            IRouterService proxy = factory.CreateChannel();
+            proxy.setColpleteTask(guid);
         }
 
         public void Dispose()

@@ -12,5 +12,11 @@ namespace Router
     {
         [OperationContract]
         bool SendData(long a,long b,long c);
+
+        [OperationContract]
+        void setColpleteTask(Guid guid);
+
+        [OperationContract]
+        void setGuid(int type_task, Uri server,Guid guid);
     }
 }

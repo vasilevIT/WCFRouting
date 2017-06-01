@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -17,22 +18,30 @@ namespace Router
 
         public static Notification nt;
         public static bool isRouter = true;
+        public static ConcurrentBag<CustomTask> tasks = new ConcurrentBag<CustomTask>();  
+
 
         static void Main(string[] args)
         {
+            System.Net.ServicePointManager.DefaultConnectionLimit = 10;
+
            Console.Title = "Router";
 
             ServiceHost host = new ServiceHost(typeof(RoutingService));
-
+            ServiceHost host_service = new ServiceHost(typeof(RouterService));
+         //   Graphics gr = new Graphics();
+          //  gr.ShowDialog();
            try
            {
                host.Open();
+               host_service.Open();
                PrintServiceInfo(host);
            }
            catch (Exception ex)
            {
                Console.WriteLine(ex.Message);
                host.Abort();
+               host_service.Abort();
                Console.ReadKey();
            }
             
@@ -47,6 +56,7 @@ namespace Router
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
             Console.ReadKey();
             host.Close();
+            host_service.Close();
         }
           static void PrintServiceInfo(ServiceHost host)
         {
@@ -58,5 +68,35 @@ namespace Router
                     endpoint.Binding.Name,
                     endpoint.Contract.Name);
         }
+
+        public static List<CustomTask> getTasksByServer(Uri server, int type_task)
+        {
+            return Program.tasks.ToList().FindAll(x => x.working_server == server);
+        }
+
+        public static void printTasks(List<CustomTask> list)
+        {
+            Console.WriteLine("Tasks list:");
+            list.Sort();
+            for (int i = 0; i < list.Count; i++)
+            {
+                Console.WriteLine("Task #{0}: id: {5}, type: {6}, start: {1}, server: {3}, completed: {4}\n" +
+                                  "avg_time: {2}, avg_cpu: {7}, avg_ram: {8}, avr_args: {9}"
+                    , i
+                    , list.ElementAt(i).start
+                    , list.ElementAt(i).taskInfo.average_time
+                    , list.ElementAt(i).working_server
+                    , list.ElementAt(i).isCompleted()
+                    , list.ElementAt(i).Guid
+                    , list.ElementAt(i).task_type
+                    , list.ElementAt(i).taskInfo.average_cpu
+                    , list.ElementAt(i).taskInfo.average_ram
+                    , list.ElementAt(i).taskInfo.average_args
+                    );
+            }
+
+        }
+
+       
     }
 }

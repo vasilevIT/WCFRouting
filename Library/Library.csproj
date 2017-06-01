@@ -32,6 +32,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
@@ -44,11 +45,14 @@
     <Compile Include="ContractCPU.cs" />
     <Compile Include="ContractRAM.cs" />
     <Compile Include="CustomDispatcher.cs" />
+    <Compile Include="CustomTask.cs" />
     <Compile Include="IInterface.cs" />
     <Compile Include="ListServers.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Notification.cs" />
     <Compile Include="PerfomanceData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TaskInfo.cs" />
     <Compile Include="UDPListener.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

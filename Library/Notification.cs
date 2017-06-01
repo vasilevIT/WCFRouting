@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -176,6 +177,79 @@ ProtocolType.Udp);
             //    Console.WriteLine("Error in getOptimizeHostNoSelf(): " + e.Message);
             //    return null;
             //}
+        }
+
+        public PerfomanceData calcServerIndexes(ConcurrentBag<CustomTask> tasks, int taskType)
+        {
+            Console.WriteLine("calcServerIndexes()");
+           List<PerfomanceData> list = servers.getList();
+            int optimize_server = 0;
+            double optimize_index = 0; // ->max
+            for (int i = 0; i < list.Count; i++)
+            {
+                //получаем список задач сервера
+                List<CustomTask> task_info = tasks.ToList().FindAll(x => x.working_server == list[i].Uri);
+               
+                double index = getServerIndex(list[i],task_info, taskType);
+                Console.WriteLine("server {2}: {0} index: {1} tasks: {3}", list[i].Uri, index, i, task_info.Count);
+                if (index > optimize_index)
+                {
+                    optimize_index = index;
+                    optimize_server = i;
+                }
+
+            }
+            Console.WriteLine("Optimize server: {0} index: {1}",list[optimize_server].Uri,optimize_index);
+            return list[optimize_server];
+
+        }
+        //Считаем свободную площадь прямоугольника ресурсов на ближайшие 2 секунды
+        //taskType - тип ресурсов...0-CPU, 1-RAM
+        public double getServerIndex(PerfomanceData pd,List<CustomTask> list, int taskType)
+        {
+            int sec = 5;
+            double index = 1.0;//значит нет задач
+            double totalResource = 100;//CPU
+            double S = sec * totalResource, X = 0.0; // 100 - 100% CPU/RAM
+            DateTime now = DateTime.Now;
+            DateTime end = DateTime.Now.AddSeconds(sec);
+            DateTime indexTime = DateTime.Now;
+            list.Sort();
+            for (int i = 0; i < list.Count; i++)
+            {
+                TaskInfo ti = list[i].taskInfo;
+                if (ti.average_time > 0)
+                {
+                    //максимальная длина
+                    TimeSpan max_time = end.Subtract(indexTime);
+                    //определяем через сколько будет конец...
+                    TimeSpan end_time = list[i].start.AddSeconds(ti.average_time).Subtract(indexTime);
+                    if (end_time > max_time)
+                    {
+                        end_time = max_time;
+                    }
+                    if (end_time.TotalSeconds <= 0)
+                    {
+                        continue;
+                    }
+                    if (taskType == 0)
+                    {
+                        X += ti.average_cpu*(end_time.TotalSeconds); //totalsec до конца отрезка длиной в sec секунды
+                    }
+                    else
+                    {
+                        X += (Math.Abs(ti.average_ram)/(pd.totalRam)) * (end_time.TotalSeconds); //totalsec до конца отрезка длиной в sec секунды
+                    }
+                    //Console.WriteLine("task #{0}: now: {1}, avg_time: {2}, end: {3}, X: {4}", i, now, ti.average_time,
+                    //    (end_time.TotalSeconds), X);
+                }
+            }
+            if (X > 0)
+            {
+                index = (S - X) / S;
+            }
+
+            return index;
         }
     }
 }

@@ -134,6 +134,10 @@ namespace Library
             servers.Clear();
         }
 
+        public List<PerfomanceData> getList()
+        {
+            return servers;
+        } 
         public PerfomanceData GetOptimizeHost()
         {
             if (!this.Sorted)
