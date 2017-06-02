@@ -48,6 +48,7 @@
     <Compile Include="CustomTask.cs" />
     <Compile Include="IInterface.cs" />
     <Compile Include="ListServers.cs" />
+    <Compile Include="LogData.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Notification.cs" />
     <Compile Include="PerfomanceData.cs" />

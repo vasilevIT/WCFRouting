@@ -11,7 +11,7 @@ namespace Library
     public interface ContractCPU
     {
         [OperationContract]
-        long LongSum(long N);
+        long LongSum(Guid id,long N);
 
         [OperationContract]
         double LongDiv(long X);

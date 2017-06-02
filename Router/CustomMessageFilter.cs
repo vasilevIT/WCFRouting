@@ -22,26 +22,26 @@ using Library;
 //See http://msdn.microsoft.com/en-us/library/ms599871.aspx and http://msdn.microsoft.com/en-us/library/ms599841.aspx
 namespace Router
 {
-    public class RoundRobinMessageFilter : MessageFilter
+    public class CustomMessageFilter : MessageFilter
     {
-        RoundRobinGroup group;
+        CustomGroup group;
         string groupName;
 
         //perform round robin organized by endpoints in a particular group
         //filters with the same group name will be round-robin'd between, different
         //group names will operate independently
-        public RoundRobinMessageFilter(string groupName)
+        public CustomMessageFilter(string groupName)
         {
-            Console.WriteLine("RoundRobinMessageFilter.RoundRobinMessageFilter(string {0})",groupName);
+            Console.WriteLine("CustomMessageFilter.RoundRobinMessageFilter(string {0})", groupName);
             if (string.IsNullOrEmpty(groupName)) { throw new ArgumentNullException("groupName"); }
 
             this.groupName = groupName;
         }
         
 
-        void SetGroup(RoundRobinGroup group)
+        void SetGroup(CustomGroup group)
         {
-            Console.WriteLine("RoundRobinMessageFilter.SetGroup()");
+            Console.WriteLine("CustomMessageFilter.SetGroup()");
             if (group == null) { throw new ArgumentNullException("group"); }
 
             this.group = group;
@@ -63,52 +63,43 @@ namespace Router
         //Message filters can be factories for their parent message filter table.
         protected override IMessageFilterTable<TFilterData> CreateFilterTable<TFilterData>()
         {
-            Console.WriteLine("RoundRobinMessageFilter.IMessageFilterTable()");
-            return (IMessageFilterTable<TFilterData>)(new RoundRobinMessageFilterTable<IEnumerable<System.ServiceModel.Description.ServiceEndpoint>>());
+            Console.WriteLine("CustomMessageFilter.IMessageFilterTable()");
+            return (IMessageFilterTable<TFilterData>)(new CustomMessageFilterTable<IEnumerable<System.ServiceModel.Description.ServiceEndpoint>>());
         }
 
         //set up the group that will do the round robining
-        class RoundRobinGroup
+        class CustomGroup
         {
             string name;
-            List<RoundRobinMessageFilter> filters = new List<RoundRobinMessageFilter>();
-            IEnumerator<RoundRobinMessageFilter> currentPosition;
+            List<CustomMessageFilter> filters = new List<CustomMessageFilter>();
+            IEnumerator<CustomMessageFilter> currentPosition;
 
-            public RoundRobinGroup(string name)
+            public CustomGroup(string name)
             {
                 Console.WriteLine("RoundRobinGroup.RoundRobinGroup(string {0})",name);
                 this.name = name;
             }
 
             //get the next filter that will match.
-            public RoundRobinMessageFilter GetNext()
+            public CustomMessageFilter GetNext()
             {
                // Console.WriteLine("RoundRobinGroup.GetNext()");
                 this.EnsureEnumerator();
-                RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.currentPosition.Current;
+                CustomMessageFilter next = (CustomMessageFilter)this.currentPosition.Current;
                 this.AdvanceEnumerator();
                 return next;
             }
             //get random filter
             //выбирает случаный фильтр из списка
-            public RoundRobinMessageFilter GetRandom()
+            public CustomMessageFilter GetRandom()
             {
                 //Console.WriteLine("RoundRobinGroup.GetRandom()");
                 try
                 {
                     int i = 0;
-                    /*
-                    foreach (RoundRobinMessageFilter item in this.filters)
-                    {
-                        Console.WriteLine("filter[{0}] = {1}"
-                            ,i ,item);
-                        i++;
-                    }
-                    Console.WriteLine("RoundRobinGroup.GetRandom() Before get filter 0 ");
-                    */
                     Random rn = new Random();
-                    RoundRobinMessageFilter next =
-                        (RoundRobinMessageFilter) this.filters.ElementAt(rn.Next(0,this.filters.Count));
+                    CustomMessageFilter next =
+                        (CustomMessageFilter) this.filters.ElementAt(rn.Next(0,this.filters.Count));
                     //Console.WriteLine("RoundRobinGroup.GetRandom() After get filter 0 ");
                     //нужно как-то проверить, доступна ли конечная точка или нет(если нет, то удалить ее из списка и выдать новую)
                     return next;
@@ -116,13 +107,13 @@ namespace Router
                 catch (Exception e)
                 {
                     Console.WriteLine("Ошибка при выборе хоста: {0}",e.Message);
-                    return (RoundRobinMessageFilter) this.filters[0];
+                    return (CustomMessageFilter) this.filters[0];
                 }
             }
 
             //сюда прописать логику поиска лучшего сервера для данного запроса
             //с наибольшим количество оперативки и свободного процессорного времени
-            public RoundRobinMessageFilter GetOptimize()
+            public CustomMessageFilter GetOptimize()
             {
                 //пока случайная реализация
                // Console.WriteLine("RoundRobinGroup.GetOptimize()");
@@ -135,7 +126,7 @@ namespace Router
                 //
                 Uri ip = key.ElementAt(0);
                 Random rm = new Random();
-                RoundRobinMessageFilter next = (RoundRobinMessageFilter)this.filters.ElementAt(rm.Next(this.filters.Count()));
+                CustomMessageFilter next = (CustomMessageFilter)this.filters.ElementAt(rm.Next(this.filters.Count()));
                 return next;
             }
 
@@ -163,9 +154,9 @@ namespace Router
             //when asked for a match, see if the enumerator is pointing at 
             //this filter.  If it is, return that this filter matched (true)
             //otherwise, return false
-            public bool Match(RoundRobinMessageFilter filter)
+            public bool Match(CustomMessageFilter filter)
             {
-                Console.WriteLine("RoundRobinGroup.Match(RoundRobinMessageFilter filter(groupName={0}))",filter.groupName);
+                Console.WriteLine("CustomGroup.Match(CustomMessageFilter filter(groupName={0}))", filter.groupName);
 
                 /*
                  Изменить реализацию
@@ -176,7 +167,7 @@ namespace Router
                 //либо текущую
                 Console.WriteLine("получаем первую позициюю(если енумератор пуст)");
                 this.EnsureEnumerator();
-                RoundRobinMessageFilter currentFilter = (RoundRobinMessageFilter)this.currentPosition.Current;
+                CustomMessageFilter currentFilter = (CustomMessageFilter)this.currentPosition.Current;
                 bool matched = Object.ReferenceEquals(currentFilter, filter);
                 if (matched)
                 {
@@ -188,9 +179,9 @@ namespace Router
             }
 
             //add another filter to the internal message filter table
-            internal void AddFilter(RoundRobinMessageFilter filter)
+            internal void AddFilter(CustomMessageFilter filter)
             {
-                Console.WriteLine("RoundRobinGroup.AddFilter(RoundRobinMessageFilter filter(groupName={0}))", filter.groupName);
+                Console.WriteLine("CustomGroup.AddFilter(RoundRobinMessageFilter filter(groupName={0}))", filter.groupName);
                 if (this.currentPosition != null)
                 {
                     throw new InvalidOperationException("Cannot add while enumerating");
@@ -202,18 +193,18 @@ namespace Router
         }
 
         //the custom message filter table class
-        class RoundRobinMessageFilterTable<TFilterData> : IMessageFilterTable<TFilterData>
+        class CustomMessageFilterTable<TFilterData> : IMessageFilterTable<TFilterData>
             where TFilterData :
            // System.Collections.Generic.List<System.Collections.Generic.IEnumerable<System.ServiceModel.Description.ServiceEndpoint>>
             IEnumerable<System.ServiceModel.Description.ServiceEndpoint>
 
         {
             Dictionary<MessageFilter, TFilterData> filters = new Dictionary<MessageFilter, TFilterData>();
-            Dictionary<string, RoundRobinGroup> groups = new Dictionary<string, RoundRobinGroup>();
+            Dictionary<string, CustomGroup> groups = new Dictionary<string, CustomGroup>();
 
-            public RoundRobinMessageFilterTable()
+            public CustomMessageFilterTable()
             {
-                Console.WriteLine("RoundRobinMessageFilterTable.RoundRobinMessageFilterTable()");
+                Console.WriteLine("CustomMessageFilterTable.RoundRobinMessageFilterTable()");
             }
 
             public bool GetMatchingFilter(MessageBuffer messageBuffer, out MessageFilter filter)
@@ -231,9 +222,9 @@ namespace Router
             {
                 Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingFilters(MessageBuffer[{0}], ICollection<MessageFilter>)", messageBuffer.ToString());
                 bool foundSome = false;
-                foreach (RoundRobinGroup group in this.groups.Values)
+                foreach (CustomGroup group in this.groups.Values)
                 {
-                    RoundRobinMessageFilter matchingFilter = group.GetNext();
+                    CustomMessageFilter matchingFilter = group.GetNext();
                     results.Add(matchingFilter);
                     foundSome = true;
                 }
@@ -245,9 +236,9 @@ namespace Router
             {
                // Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingFilters(Message[{0}],  ICollection<MessageFilter>)",message.ToString());
                 bool foundSome = false;
-                foreach (RoundRobinGroup group in this.groups.Values)
+                foreach (CustomGroup group in this.groups.Values)
                 {
-                    RoundRobinMessageFilter matchingFilter = group.GetNext();
+                    CustomMessageFilter matchingFilter = group.GetNext();
                     results.Add(matchingFilter);
                     foundSome = true;
                 }
@@ -299,9 +290,9 @@ namespace Router
             {
                 Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(MessageBuffer[{0}], ICollection<TFilterData>)",messageBuffer.CreateMessage().ToString());
                 bool foundSome = false;
-                foreach (RoundRobinGroup group in this.groups.Values)
+                foreach (CustomGroup group in this.groups.Values)
                 {
-                    RoundRobinMessageFilter matchingFilter = group.GetNext();
+                    CustomMessageFilter matchingFilter = group.GetNext();
                     results.Add(this.filters[matchingFilter]);
                     foundSome = true;
                 }
@@ -317,7 +308,7 @@ namespace Router
                     , message.GetHashCode().ToString()
                     , results.GetHashCode()
                     , DateTime.Now.ToString());
-                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 1));
+                message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 4));
 
                 //определяем тип задачи
                 int N = 0,
@@ -354,20 +345,20 @@ namespace Router
                 }
                 //message.Headers.RemoveAt(0);
                 bool foundSome = false;
-                foreach (RoundRobinGroup group in this.groups.Values)
+                foreach (CustomGroup group in this.groups.Values)
                 {
-                    RoundRobinMessageFilter matchingFilter = null;
+                    CustomMessageFilter matchingFilter = null;
                     ServiceEndpoint endpoint = null;
-                    int i = 0;
-                    while (this.filters.Count > 0 && (i < 20))
+                    while (this.filters.Count > 0)
                     {
+                        PerfomanceData host = Program.nt.calcServerIndexes(Program.tasks, task_type); //Program.nt.getOptimizeHost();
+                        Uri uri = host.Uri;
+                        Console.WriteLine("Optimize Host:{0}",uri.ToString());
                         try
                         {
-                            matchingFilter = group.GetNext();
+                            matchingFilter = GetByUri(group, uri);
                             endpoint = this.filters[matchingFilter].ElementAt(0);
-                            PerfomanceData host = Program.nt.getListServers().getList().Find(x => x.Uri.AbsoluteUri == endpoint.ListenUri.AbsoluteUri); //Program.nt.getOptimizeHost();
-                            Uri uri = host.Uri;
-                            Console.WriteLine("Optimize Host:{0}", uri.ToString());
+                            
 
                             CustomTask ct = new CustomTask(TimeSpan.FromSeconds(host.getAverageTime(task_type)), task_type, host.Uri);
                             ct.taskInfo = host.getTaskInfo(task_type);
@@ -392,7 +383,10 @@ namespace Router
                             ct.setGuid(messageId);
                             Program.tasks.Add(ct);
 
-                            Logger.Log(messageId,"routing",Program.nt.getPerfomance(),Convert.ToInt16(task_type),0);
+                            Logger.Log(messageId,"routing", Program.nt.getPerfomance(), Convert.ToInt16(task_type),0);
+                           // List<CustomTask> list = Program.getTasksByServer(uri,task_type);
+                           //Program.nt.calcServerIndexes(Program.tasks,task_type);//Program.getServerIndex(list);
+                           //Program.printTasks(list);
 
                             BasicHttpBinding binding = new BasicHttpBinding();
                             ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
@@ -406,8 +400,7 @@ namespace Router
                         {
                             Console.WriteLine("Конечная точка не  доступна. " + e.Message);
                           //  this.filters.Remove(matchingFilter);//удаляем точку
-                            //Program.nt.getDictionary().Remove(uri);
-                            i++;
+                            Program.nt.getDictionary().Remove(uri);
                             continue;
                         }
                     }
@@ -424,17 +417,36 @@ namespace Router
                 return foundSome;
             }
 
+
+            //выбор оптимального хоста из группы по URI
+            public CustomMessageFilter GetByUri(CustomGroup group, Uri uri)
+            {
+
+                CustomMessageFilter filter = null;
+                int i = 0;
+                int max = this.filters.Count;
+                while (i < max)
+                {
+                    filter = group.GetNext();
+                    if (this.filters[filter].ElementAt(0).Address.Uri == uri)
+                    {
+                        break;
+                    }
+                }
+                return filter;//this.filters[filter].ElementAt(0);
+            }
+
             //add a message filter to the MessageFilterTable
             public void Add(MessageFilter key, TFilterData value)
             {
-                RoundRobinMessageFilter filter = (RoundRobinMessageFilter)key;
-                Console.WriteLine("RoundRobinMessageFilterTable.Add(MessageFilter[{0}], TFilterData[{1}])"
+                CustomMessageFilter filter = (CustomMessageFilter)key;
+                Console.WriteLine("CustomMessageFilterTable.Add(MessageFilter[{0}], TFilterData[{1}])"
                     , filter.groupName
                     ,value.GetType().ToString());
-                RoundRobinGroup group;
+                CustomGroup group;
                 if (!this.groups.TryGetValue(filter.groupName, out group))
                 {
-                    group = new RoundRobinGroup(filter.groupName);
+                    group = new CustomGroup(filter.groupName);
                     this.groups.Add(filter.groupName, group);
                 }
                 group.AddFilter(filter);

@@ -10,6 +10,7 @@ namespace Library
     public class TaskInfo
     {
         public int type;
+        public int count_task = 0;
         private double cpu = 0;
         private double ram = 0;
         private double time = 0;

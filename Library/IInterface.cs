@@ -32,6 +32,8 @@ namespace Library
         private double n1;
         private double n2;
         private double result;
+        private string resultStr;
+        private Guid messageId;
 
         public MyMessage()
         {
@@ -55,11 +57,13 @@ namespace Library
             this.result = message.result;
         }
 
+        /*
         [MessageHeader]
         public int TTL {
             get { return ttl;  }
             set { ttl = value; }
         }
+        */
 
         [MessageHeader]
         public string Operation {
@@ -85,6 +89,20 @@ namespace Library
         {
             get { return result; }
             set { result = value; }
+        }
+        [MessageBodyMember]
+        public string ResultStr
+        {
+            get { return resultStr; }
+            set { resultStr = value; }
+        }
+
+
+        [MessageBodyMember]
+        public Guid MessageId
+        {
+            get { return messageId; }
+            set { messageId = value; }
         }
 
     }

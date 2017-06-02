@@ -30,6 +30,16 @@ namespace Library
             Console.WriteLine(this.ToString());
         }
 
+        public PerfomanceData(Uri uri)
+        {
+            cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+            ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+            cpuCounter.NextValue();
+            ramCounter.NextValue();
+            Uri = uri;
+            Console.WriteLine("PerfonamceData.PerfomanceData()");
+            Console.WriteLine(this.ToString());
+        }
         public double Cpu
         {
             get { return cpu; }
@@ -103,6 +113,15 @@ namespace Library
         public void UpdateArgs(int N, int type_task)
         {
            this.taskInfo[type_task].average_args = N;
+        }
+
+        public void incCountTask(int type_task)
+        {
+            this.taskInfo[type_task].count_task++;
+        }
+        public void decCountTask(int type_task)
+        {
+            this.taskInfo[type_task].count_task--;
         }
 
         public void UpdateCpu(double cpu, int type_task)

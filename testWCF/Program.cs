@@ -7,6 +7,7 @@ using System.ServiceModel.Routing;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Library;
 
 namespace testWCF
@@ -20,9 +21,11 @@ namespace testWCF
         public static System.Configuration.Configuration config =
             ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
+        //public static FormInfo formInfo = new FormInfo();
+
         static void Main(string[] args)
         {
-
+            
             ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 10);
            // ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
             System.Net.ServicePointManager.DefaultConnectionLimit = 10;
@@ -49,7 +52,8 @@ namespace testWCF
             pr.Initilization(address);
             nt = new Notification(address, pr);
             nt.Run();
-            
+
+           // Task.Run(()=>formInfo.ShowDialog());
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
             Console.ReadLine();
            // SendCurrentState();
@@ -71,5 +75,10 @@ namespace testWCF
             proxy.SendData(5, 999, 1);
         }
         */
+
+        public static void updateForm()
+        {
+           // formInfo.updateField(nt.getPerfomance());
+        }
     }
 }

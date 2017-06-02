@@ -22,11 +22,11 @@ namespace Client
             Console.Title = "Client";
             Console.ReadLine();
             String str;
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; true; i++)
             {
                 // Task<String> task = CallServiceAsync(proxy);
 
-                if (true)
+                if (i%2 == 0)
                 {
                     Task.Run(() => CallService("sum"));
                 }
@@ -43,14 +43,19 @@ namespace Client
                     Console.WriteLine(result); // 116
                 }); ;
                 */
+                /*
                 Console.WriteLine("Продолжить?");
                 str = Console.ReadLine();
                 if (str.Equals("n"))
                 {
                    break;
                }
-              //  factory.Close();
-                
+               */
+                Console.WriteLine("CallService #{0}",i);
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+
+                //  factory.Close();
+
                 /*
 
                 Task<String> task2 = CallServiceAsync2(proxy);
@@ -97,13 +102,22 @@ namespace Client
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             String str = "";
+            Guid id = Guid.NewGuid();
             if (method == "sum")
             {
-                str = proxy.LongSum(500 + r.Next(100)).ToString();
+                long x = 700 + r.Next(100);
+                Logger.Log(id, "Client call method LongSum(" +x+")",new PerfomanceData(new Uri("http://localhost/client1")), 0,1);
+                str = proxy.LongSum(id,x).ToString();
+                Logger.Log(id, "Client call method LongSum(" + x + ")", new PerfomanceData(new Uri("http://localhost/client1")), 0, 0);
             }
             else
             {
-                str = proxy.createBigCollection(500+r.Next(100));
+                long x = 300 + r.Next(50);
+                Logger.Log(id,"Client call method createBigCollection(" + x + ")", new PerfomanceData(new Uri("http://localhost/client1")), 1, 1);
+
+                str = proxy.createBigCollection(id,500+r.Next(100));
+
+                Logger.Log(id,"Client call method createBigCollection(" + x + ")", new PerfomanceData(new Uri("http://localhost/client1")), 1, 0);
             }
             stopWatch.Stop();
             // Get the elapsed time as a TimeSpan value.
@@ -114,7 +128,7 @@ namespace Client
                 ts.Hours, ts.Minutes, ts.Seconds,
                 ts.Milliseconds / 10);
 
-            Console.WriteLine("LongSum:" + str + "\n" + "Время выполнения " + elapsedTime);
+            Console.WriteLine("Время выполнения " + elapsedTime);
         }
     }
 }

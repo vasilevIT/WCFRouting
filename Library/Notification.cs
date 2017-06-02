@@ -87,6 +87,10 @@ ProtocolType.Udp);
         {
             return dictionary;
         }
+        public ListServers getListServers()
+        {
+            return servers;
+        }
 
         public PerfomanceData getOptimizeHost()
         {
@@ -210,7 +214,12 @@ ProtocolType.Udp);
             int sec = 5;
             double index = 1.0;//значит нет задач
             double totalResource = 100;//CPU
+            if (taskType == 1)
+            {
+                totalResource = pd.totalRam;
+            }
             double S = sec * totalResource, X = 0.0; // 100 - 100% CPU/RAM
+            double resource = 0.0;
             DateTime now = DateTime.Now;
             DateTime end = DateTime.Now.AddSeconds(sec);
             DateTime indexTime = DateTime.Now;
@@ -234,16 +243,34 @@ ProtocolType.Udp);
                     }
                     if (taskType == 0)
                     {
-                        X += ti.average_cpu*(end_time.TotalSeconds); //totalsec до конца отрезка длиной в sec секунды
+                        resource += ti.average_cpu;
+                        X += resource * (end_time.TotalSeconds); //totalsec до конца отрезка длиной в sec секунды
                     }
                     else
                     {
-                        X += (Math.Abs(ti.average_ram)/(pd.totalRam)) * (end_time.TotalSeconds); //totalsec до конца отрезка длиной в sec секунды
+                        resource += Math.Abs(ti.average_ram);
+                        X +=  resource * (end_time.TotalSeconds); //totalsec до конца отрезка длиной в sec секунды
                     }
                     //Console.WriteLine("task #{0}: now: {1}, avg_time: {2}, end: {3}, X: {4}", i, now, ti.average_time,
                     //    (end_time.TotalSeconds), X);
                 }
             }
+            double resourceOs = 0.0;
+            if (taskType == 0)
+            {
+                resourceOs = pd.Cpu - resource;
+            }
+            else
+            {
+                resourceOs = (pd.totalRam - pd.Ram - resource);
+            }
+            if (resourceOs > 0)
+            {
+                X += resourceOs * sec;
+            }
+            Console.WriteLine("Затраты задачи({1}): {0}", (resource),taskType);
+            Console.WriteLine("Затраты OS({1}): {0}", resourceOs,taskType);
+
             if (X > 0)
             {
                 index = (S - X) / S;
