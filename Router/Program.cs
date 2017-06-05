@@ -9,6 +9,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Routing;
+using System.Threading;
 using Library;
 
 namespace Router
@@ -18,16 +19,19 @@ namespace Router
 
         public static Notification nt;
         public static bool isRouter = true;
-        public static ConcurrentBag<CustomTask> tasks = new ConcurrentBag<CustomTask>();  
+        public static ConcurrentBag<CustomTask> tasks = new ConcurrentBag<CustomTask>();
+        public static ServiceHost host;
 
 
         static void Main(string[] args)
         {
-            System.Net.ServicePointManager.DefaultConnectionLimit = 10;
+            System.Net.ServicePointManager.DefaultConnectionLimit = 20;
+            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 20);
+            ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
 
-           Console.Title = "Router";
+            Console.Title = "Router";
 
-            ServiceHost host = new ServiceHost(typeof(RoutingService));
+            host = new ServiceHost(typeof(RoutingService));
             ServiceHost host_service = new ServiceHost(typeof(RouterService));
          //   Graphics gr = new Graphics();
           //  gr.ShowDialog();
@@ -35,7 +39,6 @@ namespace Router
            {
                host.Open();
                host_service.Open();
-               PrintServiceInfo(host);
            }
            catch (Exception ex)
            {
@@ -51,8 +54,21 @@ namespace Router
             PerfomanceData pr = new PerfomanceData();
             pr.Initilization(address);
             nt = new Notification();
+            nt.getListServers().host = host;
             nt.Run();
-
+            /*
+            RoutingConfiguration rc = new RoutingConfiguration();
+            ServiceEndpoint endpoint = new ServiceEndpoint(
+                ContractDescription.GetContract(typeof(IRequestReplyRouter))
+                , new BasicHttpBinding()
+                , new EndpointAddress("http://192.168.1.68:4000/RouterA3")
+                );
+            rc.FilterTable.Add(
+                new CustomMessageFilter("customGroup_custom"), new List<ServiceEndpoint> { endpoint }
+                );
+            Program.host.Extensions.Find<RoutingExtension>().ApplyConfiguration(rc);
+            */
+            PrintServiceInfo(host);
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
             Console.ReadKey();
             host.Close();

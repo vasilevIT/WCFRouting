@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Library
 {
     [Serializable]
-    class LogData
+    public class LogData
     {
         public Guid operation_id = Guid.Empty; 
         public DateTime time;
@@ -19,6 +19,7 @@ namespace Library
         public double ram;
         public int countTask;
         public string message;
+        public PerfomanceData routing_host;
 
         public LogData(string host, short type, short in_out, PerfomanceData pd,string message)
         {

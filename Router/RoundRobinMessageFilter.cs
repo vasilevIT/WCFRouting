@@ -392,7 +392,8 @@ namespace Router
                             ct.setGuid(messageId);
                             Program.tasks.Add(ct);
 
-                            Logger.Log(messageId,"routing",Program.nt.getPerfomance(),Convert.ToInt16(task_type),0);
+                            Logger.Log(messageId, "router", "routing",Program.nt.getPerfomance()
+                                ,Convert.ToInt16(task_type),0,host);
 
                             BasicHttpBinding binding = new BasicHttpBinding();
                             ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,

@@ -26,8 +26,8 @@ namespace Library
             ramCounter = new PerformanceCounter("Memory", "Available MBytes");
             cpuCounter.NextValue();
             ramCounter.NextValue();
-            Console.WriteLine("PerfonamceData.PerfomanceData()");
-            Console.WriteLine(this.ToString());
+            //Console.WriteLine("PerfonamceData.PerfomanceData()");
+            //Console.WriteLine(this.ToString());
         }
 
         public PerfomanceData(Uri uri)
@@ -37,8 +37,8 @@ namespace Library
             cpuCounter.NextValue();
             ramCounter.NextValue();
             Uri = uri;
-            Console.WriteLine("PerfonamceData.PerfomanceData()");
-            Console.WriteLine(this.ToString());
+            //Console.WriteLine("PerfonamceData.PerfomanceData()");
+            //Console.WriteLine(this.ToString());
         }
         public double Cpu
         {

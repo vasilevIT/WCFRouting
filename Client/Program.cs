@@ -17,62 +17,50 @@ namespace Client
             ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
         static void Main(string[] args)
         {
-            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 10);
+            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 20);
             ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
             Console.Title = "Client";
             Console.ReadLine();
-            String str;
-            for (int i = 0; true; i++)
+            Thread th = new Thread(new ThreadStart(delegate
             {
-                // Task<String> task = CallServiceAsync(proxy);
-
-                if (i%2 == 0)
+                Random r = new Random();
+                for (int i = 0; true; i++)
                 {
-                    Task.Run(() => CallService("sum"));
+                    if (r.Next(1, 100) % 3 == 0)
+                    {
+                        Task.Run(() => CallService("collection", i));
+                    }
+                    else
+                    {
+                        Task.Run(() => CallService("sum", i));
+                    }
+
+                    // Console.WriteLine("Продолжить?");
+                    // str = Console.ReadLine();
+                    // if (str.Equals("n"))
+                    // {
+
+                    //    break;
+                    //}
+
+                    if (i > 10)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(2000));
+                    }
+                    else
+                    {
+
+                        Thread.Sleep(TimeSpan.FromMilliseconds(2000));
+                    }
+
+
                 }
-                else
-                {
-                    Task.Run(() => CallService("collection"));
-                }
-
-                /*
-                var awaiter = task.GetAwaiter();
-                awaiter.OnCompleted(() => // Продолжение
-                {
-                    String result = awaiter.GetResult();
-                    Console.WriteLine(result); // 116
-                }); ;
-                */
-                /*
-                Console.WriteLine("Продолжить?");
-                str = Console.ReadLine();
-                if (str.Equals("n"))
-                {
-                   break;
-               }
-               */
-                Console.WriteLine("CallService #{0}",i);
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-
-                //  factory.Close();
-
-                /*
-
-                Task<String> task2 = CallServiceAsync2(proxy);
-                var awaiter2 = task2.GetAwaiter();
-                awaiter2.OnCompleted(() => // Продолжение
-                {
-                    String result = awaiter2.GetResult();
-                    Console.WriteLine(result); // 116
-                }); ;
-                Console.WriteLine("Продолжить?");
-                str = Console.ReadLine();
-                if (str.Equals("n"))
-                {
-                    break;
-                }
-                */
-            }
+            }));
+            th.Start();
+            Console.ReadLine();
+            th.Abort();
+            Console.WriteLine("Закончили посылать запросы");
+            
 
             Console.ReadKey();
 
@@ -89,46 +77,55 @@ namespace Client
          //   return Task.Run(() => CallService(proxy));
         //}
 
-        public static void CallService(string method)
+        public static void CallService(string method, int i)
         {
 
+            Console.WriteLine("CallService #{0}", i);
             Uri address = new Uri(config.AppSettings.Settings["router"].Value);
             BasicHttpBinding binding = new BasicHttpBinding();
             EndpointAddress endpoint = new EndpointAddress(address);
             ChannelFactory<IInterface2> factory = new ChannelFactory<IInterface2>(binding, endpoint);
             IInterface2 proxy = factory.CreateChannel();
-            Console.WriteLine("call async method: {0}", Thread.CurrentThread);
+
             Random r = new Random();
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            String str = "";
-            Guid id = Guid.NewGuid();
-            if (method == "sum")
+            try
             {
-                long x = 700 + r.Next(100);
-                Logger.Log(id, "Client call method LongSum(" +x+")",new PerfomanceData(new Uri("http://localhost/client1")), 0,1);
-                str = proxy.LongSum(id,x).ToString();
-                Logger.Log(id, "Client call method LongSum(" + x + ")", new PerfomanceData(new Uri("http://localhost/client1")), 0, 0);
+                String str = "";
+                Guid id = Guid.NewGuid();
+                if (method == "sum")
+                {
+                    long x = 450 + r.Next(30);
+                    Logger.Log(id, "client", "Client call method LongSum(" + x + ")",
+                        new PerfomanceData(new Uri("http://localhost/client1")), 0, 1);
+                    str = proxy.LongSum(id, x).ToString();
+                    Logger.Log(id, "client", "Client call method LongSum(" + x + ")",
+                        new PerfomanceData(new Uri("http://localhost/client1")), 0, 0);
+                }
+                else
+                {
+                    long x = 580 + r.Next(30);
+                    Logger.Log(id, "client", "Client call method createBigCollection(" + x + ")",
+                        new PerfomanceData(new Uri("http://localhost/client1")), 1, 1);
+
+                    str = proxy.createBigCollection(id, Convert.ToInt32(x));
+
+                    Logger.Log(id, "client", "Client call method createBigCollection(" + x + ")",
+                        new PerfomanceData(new Uri("http://localhost/client1")), 1, 0);
+                }
             }
-            else
+            catch (Exception e)
             {
-                long x = 300 + r.Next(50);
-                Logger.Log(id,"Client call method createBigCollection(" + x + ")", new PerfomanceData(new Uri("http://localhost/client1")), 1, 1);
-
-                str = proxy.createBigCollection(id,500+r.Next(100));
-
-                Logger.Log(id,"Client call method createBigCollection(" + x + ")", new PerfomanceData(new Uri("http://localhost/client1")), 1, 0);
+                Console.WriteLine("Не дождались ответа. {0}", e.Message);
             }
             stopWatch.Stop();
-            // Get the elapsed time as a TimeSpan value.
             TimeSpan ts = stopWatch.Elapsed;
-           // Console.WriteLine(proxy.getHostName());
-            // Format and display the TimeSpan value.
             string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                 ts.Hours, ts.Minutes, ts.Seconds,
                 ts.Milliseconds / 10);
 
-            Console.WriteLine("Время выполнения " + elapsedTime);
+            Console.WriteLine("Задача №"+i+", Время выполнения " + elapsedTime);
         }
     }
 }

@@ -11,6 +11,7 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Description;
 using System.ServiceModel;
+using System.Threading;
 using System.Xml;
 using Library;
 
@@ -335,6 +336,40 @@ namespace testWCF
                     ,results.GetHashCode()
                     ,DateTime.Now.ToString());
                 Console.WriteLine("TTL = {0}",TTL);
+
+                //определяем тип задачи
+                int N = 0,
+                task_type = 0;
+                XmlDocument xml = new XmlDocument();
+                xml.LoadXml(message.ToString());
+                XmlNamespaceManager manager = new XmlNamespaceManager(xml.NameTable);
+                manager.AddNamespace("s", "http://schemas.xmlsoap.org/soap/envelope/");
+                XmlNode xn = xml.SelectSingleNode("//s:Body", manager);
+                Guid messageId = Guid.Empty;
+                if (xn != null)
+                {
+                    string firstName = xn.InnerText; // arg N
+                    XmlNode method = xn.LastChild;
+                    XmlNode childNode = xn.FirstChild.LastChild; //arg N
+                    if (method.Name == "LongSum")
+                    {
+                        task_type = 0;
+                    }
+                    else if (method.Name == "createBigCollection")
+                    {
+                        task_type = 1;
+                    }
+                    else
+                    {
+                        task_type = -1;
+                    }
+                    N = Int32.Parse(childNode.InnerText);
+                    string guidStr = xn.FirstChild.FirstChild.InnerText;
+                    messageId = new Guid(guidStr);
+                }
+                
+                Console.WriteLine("messageId = {0}", messageId);
+                Console.WriteLine("N = {0}", N);
                 bool foundSome = false;
                 foreach (RoundRobinGroup group in this.groups.Values)
                 {
@@ -343,13 +378,13 @@ namespace testWCF
                     Random r = new Random();
                     while (this.filters.Count > 0)
                     {
+                        Program.nt.getPerfomance().Initilization();
+                        PerfomanceData optimize_host = null;
                         try
                         {
-                            Program.nt.getPerfomance().Initilization();
-                            PerfomanceData optimize_host = Program.nt.getOptimizeHostNoSelf();
+                            optimize_host = Program.nt.getOptimizeHostNoSelf();
                             //выбираем хост их списка или выполняем сами
                             //если выполнить быстрее, чем пересылать
-                            Console.WriteLine("This Host:{0}", Program.nt.getPerfomance().ToString());
                             /*
                             if (optimize_host != null)
                             { Console.WriteLine("Optimize Host:{0}", optimize_host.ToString());}
@@ -358,22 +393,31 @@ namespace testWCF
                             */
                             if ((TTL > 0)
                                 && (optimize_host != null)
-                                && ((optimize_host.Cpu<Program.nt.getPerfomance().Cpu)
-                                    || (optimize_host.Ram < Program.nt.getPerfomance().Ram))
+                                && (
+                                ((optimize_host.Cpu<Program.nt.getPerfomance().Cpu) && (task_type == 0))
+                                    || ((optimize_host.Ram > Program.nt.getPerfomance().Ram) && (task_type == 1))
+                                    )
                                 )
                             {
                                 Uri uri = optimize_host.Uri;
                                 if (uri != null)
                                 {
+                                    Console.WriteLine("Routing to Host:{0}", uri.ToString());
+                                    Program.Log(String.Format("Routing to Host:{0}", uri.ToString()));
                                     matchingFilter = GetByUri(group, uri);
                                     endpoint = this.filters[matchingFilter].ElementAt(0);
 
                                     //проверка доступности
                                     BasicHttpBinding binding = new BasicHttpBinding();
+                                    EndpointAddress endpoint_check = new EndpointAddress(endpoint.Address.Uri.ToString().Replace("Router", ""));
                                     ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
-                                        endpoint.Address);
+                                        endpoint_check);
                                     IInterface proxy = factory.CreateChannel();
-                                   // proxy.Check();
+                                    proxy.Check();
+
+                                    Logger.Log(messageId, "router", "routing"
+                                        , Program.nt.getPerfomance(), Convert.ToInt16(task_type), 0,optimize_host);
+                                  
                                 }
                             }
                             else
@@ -381,10 +425,10 @@ namespace testWCF
                                 Program.nt.getPerfomance().CountTask++;
                                 Uri uri_self = Program.nt.getPerfomance().Uri;
                                 string str = uri_self.AbsoluteUri.Replace("Router", "");
+                                Console.WriteLine("Routing inside host() :  " + str);
+                                Program.Log(String.Format("Routing inside host() :  " + str));
                                 uri_self = new Uri(str);
                                 matchingFilter = GetByUri(group, uri_self);
-                                Console.WriteLine("Routing inside host() :  " + str);
-                                Console.WriteLine("this.PerfomanceData = " + Program.nt.getPerfomance().ToString());
                                 endpoint = this.filters[matchingFilter].ElementAt(0);
                             }
                             break;
@@ -392,6 +436,9 @@ namespace testWCF
                         catch (Exception e)
                         {
                             Console.WriteLine("Конечная точка не  доступна. " + e.Message);
+                            Program.Log(String.Format("Конечная точка не  доступна. " + e.Message));
+                            Program.nt.getListServers().Delete(optimize_host);
+                            Thread.Sleep(TimeSpan.FromMilliseconds(500));
                           //  this.filters.Remove(matchingFilter);//удаляем точку
                             continue;
                         }
@@ -421,10 +468,11 @@ namespace testWCF
                     filter =group.GetNext();
                     if (this.filters[filter].ElementAt(0).Address.Uri == uri)
                     {
-                        break;
+                        return filter;
                     }
+                    i++;
                 }
-                return filter;//this.filters[filter].ElementAt(0);
+                throw new Exception(String.Format("Не найдена такая конечная точка ({0})",uri));//this.filters[filter].ElementAt(0);
             }
 
             //add a message filter to the MessageFilterTable

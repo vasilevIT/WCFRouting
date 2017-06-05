@@ -14,12 +14,25 @@ namespace Library
     {
         private static string file_name = "log.txt";
 
-        public static void Log(string message, PerfomanceData pd, short task_type, short isBegin)
+        public static void Log(string host_type,string message, PerfomanceData pd, short task_type, short isBegin)
         {
-            Log(Guid.Empty,message,pd,task_type,isBegin);
+            Log(Guid.Empty,host_type,message,pd,task_type,isBegin,null);
         }
 
-        public static void Log(Guid id,string message,PerfomanceData pd, short task_type, short isBegin)
+        public static void Log(string host_type,string message, PerfomanceData pd
+            , short task_type, short isBegin, PerfomanceData routing_host)
+        {
+            Log(Guid.Empty,host_type,message,pd,task_type,isBegin,routing_host);
+        }
+
+        public static void Log(Guid id, string host_type, string message, PerfomanceData pd
+            , short task_type, short isBegin)
+        {
+            Log(id, host_type, message, pd, task_type, isBegin, null);
+        }
+
+        public static void Log(Guid id,string host_type,string message,PerfomanceData pd
+            , short task_type, short isBegin, PerfomanceData routing_host)
         {
             string writing_message = "";
             /*
@@ -40,8 +53,12 @@ namespace Library
                                                    ,message
                                                    );
             */
-            LogData logData = new LogData("client",task_type,isBegin,pd,message);
+            LogData logData = new LogData(host_type,task_type,isBegin,pd,message);
             logData.operation_id = id;
+            if (routing_host != null)
+            {
+                logData.routing_host = routing_host;
+            }
             MemoryStream stream1 = new MemoryStream();
             DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(LogData));
             ser.WriteObject(stream1, logData);

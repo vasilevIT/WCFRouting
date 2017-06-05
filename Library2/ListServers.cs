@@ -6,8 +6,10 @@ using System.ServiceModel.Description;
 using System.ServiceModel.Routing;
 using System.Text;
 using System.Threading.Tasks;
+using Library;
+using Router;
 
-namespace Library
+namespace Library2
 {
     public class ListServers
     {
@@ -28,7 +30,7 @@ namespace Library
                 servers.Add(pd);
                 if (host != null)
                 {
-                    /*
+                    
                     RoutingConfiguration rc = new RoutingConfiguration();
                     //update router configuration
                     for (int i = 0; i < servers.Count; i++)
@@ -45,7 +47,7 @@ namespace Library
                     host.Extensions.Find<RoutingExtension>().ApplyConfiguration(rc);
                     
                     Console.WriteLine("Updating Configuration");
-                    */
+                    
                 }
             }
             else

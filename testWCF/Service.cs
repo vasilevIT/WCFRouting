@@ -33,7 +33,7 @@ namespace testWCF
 
         public void Check()
         {
-            Console.WriteLine("Check();");
+            ;// Console.WriteLine("Check();");
         }
 
         public string SayHello(string name)
@@ -53,14 +53,16 @@ namespace testWCF
 
         public long LongSum(Guid id,long N)
         {
-            Console.WriteLine("LongSum();");
-            Logger.Log(id, "begin calc", Program.nt.getPerfomance(), 0, 0);
+            Program.Log(String.Format("LongSum({0});",N));
+            Logger.Log(id,"server", "begin calc", Program.nt.getPerfomance(), 0, 0);
             long sum = 0;
             try
             {
-               // setTaskGuid(0, Program.nt.getPerfomance().Uri, id);
+                // setTaskGuid(0, Program.nt.getPerfomance().Uri, id);
+                Program.nt.getPerfomance().incCountTask(0);
                 Program.nt.getPerfomance().UpdateAvg(0);
                 Program.nt.getPerfomance().UpdateArgs(Convert.ToInt32(N), 0);
+                Program.formInfo.Invoke(new Action(() => Program.formInfo.updateField(Program.nt.getPerfomance())));
 
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
@@ -68,10 +70,10 @@ namespace testWCF
                 float y1 = ramCounter.NextValue();
                 for (int i = 0; i < N; i++)
                 {
-                    Thread.Sleep(TimeSpan.FromMilliseconds(5));
-                    for (int j = 0; j < N; j++)
+                    Thread.Sleep(TimeSpan.FromMilliseconds(2));
+                    for (int j = 0; j < N*2; j++)
                     {
-                        for (int k = 0; k < N; k++)
+                        for (int k = 0; k < N*3; k++)
                         {
 
                             sum = sum + i*(j ^ i) + k;
@@ -84,22 +86,24 @@ namespace testWCF
                 Program.nt.getPerfomance().UpdateCpu(x2, 0);
                 Program.nt.getPerfomance().UpdateRam(y2, 0);
                 Program.nt.getPerfomance().UpdateTimeStamp(stopWatch.Elapsed, 0);
+                Program.nt.getPerfomance().decCountTask(0);
                 TimeSpan ts = stopWatch.Elapsed;
                 string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
                     ts.Hours, ts.Minutes, ts.Seconds,
                     ts.Milliseconds/10);
 
                 completeTask(id);
-                Program.nt.getPerfomance().CountTask--;
-                Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB, time: {2}", x2, ramCounter.NextValue(),
-                    elapsedTime);
+                Program.Log(String.Format("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB, time: {2}", x2, ramCounter.NextValue(),
+                    elapsedTime));
+                Program.formInfo.Invoke(new Action(() => Program.formInfo.updateField(Program.nt.getPerfomance())));
+
                 // Program.nt.getPerfomance().CountTask--;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
-            Logger.Log(id, "end calc", Program.nt.getPerfomance(), 0, 1);
+            Logger.Log(id, "server", "end calc", Program.nt.getPerfomance(), 0, 1);
             return sum;
         }
 
@@ -119,7 +123,7 @@ namespace testWCF
                 }
             }
             float x2 = cpuCounter.NextValue();
-            Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
+           // Console.WriteLine("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB", x2, ramCounter.NextValue());
             Program.nt.getPerfomance().CountTask--;
            // completeTask();
             return result;
@@ -128,12 +132,14 @@ namespace testWCF
         public string createBigCollection(Guid id,int N)
         {
             //setTaskGuid(0, Program.nt.getPerfomance().Uri, id);
-            Console.WriteLine("createBigCollection();");
-            Logger.Log(id, "begin calc", Program.nt.getPerfomance(), 1, 0);
+            Program.Log(String.Format("createBigCollection({0});",N));
+            //Console.WriteLine("createBigCollection();");
+            Logger.Log(id, "server", "begin calc", Program.nt.getPerfomance(), 1, 0);
             Program.nt.getPerfomance().UpdateAvg(1);
             Program.nt.getPerfomance().incCountTask(1);
             Program.nt.getPerfomance().UpdateArgs(Convert.ToInt32(N), 1);
-
+            Program.formInfo.Invoke(new Action(() => Program.formInfo.updateField(Program.nt.getPerfomance())));
+            
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             float x1 = cpuCounter.NextValue();
@@ -149,7 +155,7 @@ namespace testWCF
             }
             for (int i = 0; i < N; i++)
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(20));
+                Thread.Sleep(TimeSpan.FromMilliseconds(5));
                 for (int j = 0; j < N; j++)
                 {
                 list_double.Add(r.NextDouble());
@@ -171,13 +177,14 @@ namespace testWCF
                 ts.Hours, ts.Minutes, ts.Seconds,
                 ts.Milliseconds / 10);
             string result = String.Format("Нагрузка CPU: {0}%, нагрузка RAM: {1}MB\nTime: {2}", x2, ramCounter.NextValue(),elapsedTime);
-            Console.WriteLine(result);
-            Program.nt.getPerfomance().CountTask--;
+            //Console.WriteLine(result);
             completeTask(id);
             list_double.Clear();
             list_string.Clear();
             Program.nt.getPerfomance().decCountTask(1);
-            Logger.Log(id, "end calc", Program.nt.getPerfomance(), 1, 1);
+            Logger.Log(id, "server", "end calc", Program.nt.getPerfomance(), 1, 1);
+            Program.formInfo.Invoke(new Action(() => Program.formInfo.updateField(Program.nt.getPerfomance())));
+            Program.Log(result);
             //Program.updateForm();
             return result;
 

@@ -34,50 +34,31 @@ namespace testWCF
         {
 
         }
-
-        delegate void SetDataCallback(PerfomanceData pd);
+        
         public void updateField(PerfomanceData pd)
         {
-            ;//Task.Run(() => updateFieldUnSave(pd));
 
-        }
-
-        private void updateFieldUnSave(PerfomanceData pd)
-        {
-            /*
-            if (this.countTask1.InvokeRequired)
-            {
-                SetDataCallback d = new SetDataCallback(updateFieldUnSave);
-                this.Invoke(d, new object[] {pd});
-            }
-            else
-            {
-
-                this.countTask1.Text = pd.getTaskInfo(0).count_task.ToString();
-            }
-            */
-            /*
-            if (this.countTask2.InvokeRequired)
-            {
-                SetDataCallback d = new SetDataCallback(updateFieldUnSave);
-                this.Invoke(d, new object[] {pd});
-            }
-            else
-            {
-
-                Console.WriteLine("test");
-                //this.countTask2.Text = pd.getTaskInfo(1).count_task.ToString();
-            }
-            */
-            /*
+            this.countTask1.Text = pd.getTaskInfo(0).count_task.ToString();
             this.countTask2.Text = pd.getTaskInfo(1).count_task.ToString();
 
-            this.time1.Text = pd.getTaskInfo(0).average_time.ToString();
-            this.time2.Text = pd.getTaskInfo(1).average_time.ToString();
+            this.time1.Text = String.Format("{0:F} sec", pd.getTaskInfo(0).average_time);
+            this.time2.Text = String.Format("{0:F} sec", pd.getTaskInfo(1).average_time);
 
-            this.Cpu.Text = pd.Cpu.ToString();
-            this.Ram.Text = pd.Ram.ToString();
-            */
+            this.Cpu.Text = String.Format("{0:F}%",pd.Cpu);
+            this.Ram.Text = String.Format("{0:F} MB", pd.Ram);
+
+        }
+        
+        public void AddLog(string message)
+        {
+            DateTime now = DateTime.Now;
+            LogBox.AppendText(String.Format("{0:00}:{1:00}:{2:00}: {3}{4}"
+                ,now.Hour
+                , now.Minute
+                , now.Second
+                , message, Environment.NewLine));
+            LogBox.SelectionStart = LogBox.Text.Length;
+            LogBox.ScrollToCaret();
         }
     }
 }

@@ -6,14 +6,15 @@ using System.ServiceModel.Description;
 using System.ServiceModel.Routing;
 using System.Text;
 using System.Threading.Tasks;
+using Library;
 
-namespace Library
+namespace Router
 {
     public class ListServers
     {
         private List<PerfomanceData> servers;
         private bool Sorted = false;
-        private ServiceHost host = null;
+        public ServiceHost host = null;
 
         public ListServers()
         {
@@ -26,27 +27,7 @@ namespace Library
             if (index == -1) //не существует
             {
                 servers.Add(pd);
-                if (host != null)
-                {
-                    /*
-                    RoutingConfiguration rc = new RoutingConfiguration();
-                    //update router configuration
-                    for (int i = 0; i < servers.Count; i++)
-                    {
-                        ServiceEndpoint endpoint = new ServiceEndpoint(
-                            ContractDescription.GetContract(typeof (IRequestReplyRouter))
-                            , new BasicHttpBinding()
-                            , new EndpointAddress(servers[i].Uri)
-                            );
-                        rc.FilterTable.Add(
-                            new CustomMessageFilter("customGroup_custom"), new List<ServiceEndpoint> {endpoint}
-                            );
-                    }
-                    host.Extensions.Find<RoutingExtension>().ApplyConfiguration(rc);
-                    
-                    Console.WriteLine("Updating Configuration");
-                    */
-                }
+                UpdateConfiguration();
             }
             else
             {
@@ -56,9 +37,33 @@ namespace Library
             this.Sort();
         }
 
+        private void UpdateConfiguration()
+        {
+
+            if (host != null)
+            {
+                RoutingConfiguration rc = new RoutingConfiguration();
+                //update router configuration
+                for (int i = 0; i < servers.Count; i++)
+                {
+                    ServiceEndpoint endpoint = new ServiceEndpoint(
+                        ContractDescription.GetContract(typeof(IRequestReplyRouter))
+                        , new BasicHttpBinding()
+                        , new EndpointAddress(servers[i].Uri)
+                        );
+                    rc.FilterTable.Add(
+                        new CustomMessageFilter("customGroup_custom"), new List<ServiceEndpoint> { endpoint }
+                        );
+                }
+                host.Extensions.Find<RoutingExtension>().ApplyConfiguration(rc);
+
+                Console.WriteLine("Updating Configuration");
+            }
+        }
         public void Delete(PerfomanceData pd)
         {
             servers.Remove(pd);
+            UpdateConfiguration();
         }
 
         public PerfomanceData Find(PerfomanceData pd)

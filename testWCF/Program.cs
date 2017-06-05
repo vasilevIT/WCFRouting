@@ -21,7 +21,7 @@ namespace testWCF
         public static System.Configuration.Configuration config =
             ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
-        //public static FormInfo formInfo = new FormInfo();
+        public static FormInfo formInfo = new FormInfo();
 
         static void Main(string[] args)
         {
@@ -29,56 +29,74 @@ namespace testWCF
             ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 10);
            // ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
             System.Net.ServicePointManager.DefaultConnectionLimit = 10;
-            Console.Title = "Server";
-            ServiceHost host = new ServiceHost(typeof(Service));
-            host.Open();
-            
-            ServiceHost routing_host = new ServiceHost(typeof(RoutingService));
 
-            try
+            //Application.Run(new FormInfo());
+
+            //    Console.Title = "Server";
+            Thread viewerThread = new Thread(delegate ()
             {
-                routing_host.Open();
-            }
-            catch (Exception ex)
+                ServiceHost host = new ServiceHost(typeof(Service));
+                host.Open();
+
+                ServiceHost routing_host = new ServiceHost(typeof(RoutingService));
+
+                try
+                {
+                    routing_host.Open();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    routing_host.Abort();
+                    Console.ReadKey();
+                }
+
+                address = routing_host.Description.Endpoints[0].Address;
+
+                PerfomanceData pr = new PerfomanceData();
+                pr.Initilization(address);
+                nt = new Notification(address, pr);
+                nt.getListServers().host = routing_host;
+                nt.Run();
+            });
+
+            viewerThread.SetApartmentState(ApartmentState.STA); // needs to be STA or throws exception
+            viewerThread.Start();
+
+            Thread viewerThread2 = new Thread(delegate()
             {
-                Console.WriteLine(ex.Message);
-                routing_host.Abort();
-                Console.ReadKey();
-            }
- 
-            address = routing_host.Description.Endpoints[0].Address;
+                while (true)
+                {
+                    try
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(2));
+                        if(Program.nt!=null)
+                            if(Program.nt.getPerfomance() != null)
+                             formInfo.Invoke(new Action(() => formInfo.updateField(Program.nt.getPerfomance())));
+                    }
+                    catch (Exception e)
+                    {
+                        Program.Log("Ошибка." + e.Message);
+                    }
+                }
+            });
+            viewerThread2.SetApartmentState(ApartmentState.STA); // needs to be STA or throws exception
+            viewerThread2.Start();
 
-            PerfomanceData pr = new PerfomanceData();
-            pr.Initilization(address);
-            nt = new Notification(address, pr);
-            nt.Run();
-
-           // Task.Run(()=>formInfo.ShowDialog());
+            Application.Run(formInfo);
+            //Console.WriteLine("Данные сервера на момент запуска: {0}",pr.ToString());
             Console.WriteLine("Сервер запущен. Нажмите любую клавишу для закрытия.");
             Console.ReadLine();
-           // SendCurrentState();
-            Console.ReadKey();
+          //  Console.ReadKey();
  
-            host.Close();
+           // host.Close();
 
         }
-        /*
-        private static void SendCurrentState()
+
+        public static void Log(string message)
         {
-            Uri address = new Uri("http://localhost:4000/RouterStaff");
-            BasicHttpBinding binding = new BasicHttpBinding();
-            EndpointAddress endpoint = new EndpointAddress(address);
+            formInfo.Invoke(new Action(() => formInfo.AddLog(message)));
 
-
-            ChannelFactory<IRouterService> factory = new ChannelFactory<IRouterService>(binding, endpoint);
-            IRouterService proxy = factory.CreateChannel();
-            proxy.SendData(5, 999, 1);
-        }
-        */
-
-        public static void updateForm()
-        {
-           // formInfo.updateField(nt.getPerfomance());
         }
     }
 }

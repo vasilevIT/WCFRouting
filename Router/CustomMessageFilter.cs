@@ -10,6 +10,7 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.ServiceModel.Description;
 using System.ServiceModel;
+using System.ServiceModel.Routing;
 using System.Threading;
 using System.Xml;
 using Library;
@@ -304,7 +305,7 @@ namespace Router
             public bool GetMatchingValues(Message message, ICollection<TFilterData> results)
             {
 
-                Console.WriteLine("TIME:{2} RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])"
+                Console.WriteLine("TIME:{2} CustomMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])"
                     , message.GetHashCode().ToString()
                     , results.GetHashCode()
                     , DateTime.Now.ToString());
@@ -351,7 +352,12 @@ namespace Router
                     ServiceEndpoint endpoint = null;
                     while (this.filters.Count > 0)
                     {
-                        PerfomanceData host = Program.nt.calcServerIndexes(Program.tasks, task_type); //Program.nt.getOptimizeHost();
+                        PerfomanceData host = Program.nt.calcServerIndexes(Program.tasks, task_type); //
+                        //host = Program.nt.getOptimizeHost();
+                        if (host == null)
+                        {
+                            throw new CommunicationException("Нет доступных серверов");
+                        }
                         Uri uri = host.Uri;
                         Console.WriteLine("Optimize Host:{0}",uri.ToString());
                         try
@@ -383,16 +389,16 @@ namespace Router
                             ct.setGuid(messageId);
                             Program.tasks.Add(ct);
 
-                            Logger.Log(messageId,"routing", Program.nt.getPerfomance(), Convert.ToInt16(task_type),0);
-                           // List<CustomTask> list = Program.getTasksByServer(uri,task_type);
-                           //Program.nt.calcServerIndexes(Program.tasks,task_type);//Program.getServerIndex(list);
-                           //Program.printTasks(list);
-
                             BasicHttpBinding binding = new BasicHttpBinding();
+                            EndpointAddress endpoint_check = new EndpointAddress(endpoint.Address.Uri.ToString().Replace("Router", ""));
                             ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
-                                endpoint.Address);
+                                endpoint_check);
                             IInterface proxy = factory.CreateChannel();
-                           //  proxy.Check();
+                            proxy.Check();
+
+                            Logger.Log(messageId, "router", "routing"
+                                , Program.nt.getPerfomance(), Convert.ToInt16(task_type),0, host);
+                           
                             
                             break;
                         }
@@ -400,7 +406,7 @@ namespace Router
                         {
                             Console.WriteLine("Конечная точка не  доступна. " + e.Message);
                           //  this.filters.Remove(matchingFilter);//удаляем точку
-                            Program.nt.getDictionary().Remove(uri);
+                            Program.nt.getListServers().Delete(host);
                             continue;
                         }
                     }
@@ -425,11 +431,13 @@ namespace Router
                 CustomMessageFilter filter = null;
                 int i = 0;
                 int max = this.filters.Count;
+                bool find = false;
                 while (i < max)
                 {
                     filter = group.GetNext();
                     if (this.filters[filter].ElementAt(0).Address.Uri == uri)
                     {
+                        find = true;
                         break;
                     }
                 }
