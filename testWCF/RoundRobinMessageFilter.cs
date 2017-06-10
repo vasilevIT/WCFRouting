@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -315,35 +316,49 @@ namespace testWCF
             public bool GetMatchingValues(Message message, ICollection<TFilterData> results)
             {
                 int TTL = 0;
-               // Console.WriteLine("Message HashCode1: {0}", message);
+                //Program.Log(String.Format("Message HashCode1: {0}", message));
                 // message = TransformMessage(message);
                 try
                 {
                     string hi = message.Headers.GetHeader<string>("TTL", "");
+                    int m = 0;
+                    //IEnumerator<MessageHeaderInfo> iterator = message.Headers.GetEnumerator();
+                    foreach (MessageHeaderInfo header in message.Headers)
+                    {
+                        if (header.Name == "TTL")
+                        {
+                            break;
+                        }
+                        m++;
+                    }
                     TTL = Int32.Parse(hi);
                     TTL = TTL - 1;
-                    message.Headers.RemoveAt(0);
+                    
+                    message.Headers.RemoveAt(m);
                     message.Headers.Add(MessageHeader.CreateHeader("TTL", "", TTL));
+                    
                 }
                 catch (Exception e)
                 {
                     ;
                 }
-              //  Console.WriteLine("Message HashCode2: {0}",message);
-               // Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])",message.ToString(),results.GetType());
-                Console.WriteLine("TIME:{2} RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])"
+                //  Console.WriteLine("Message HashCode2: {0}",message);
+                // Console.WriteLine("RoundRobinMessageFilterTable.GetMatchingValues(Message[{0}], ICollection<TFilterData> [{1}])",message.ToString(),results.GetType());
+                Program.Log(String.Format("TIME:{2} CustomMessageFilterTable.GetMatchingValues(Message.HashCode:[{0}], ICollection<TFilterData> [{1}])"
                     ,message.GetHashCode()
                     ,results.GetHashCode()
-                    ,DateTime.Now.ToString());
-                Console.WriteLine("TTL = {0}",TTL);
+                    ,DateTime.Now.ToString()));
+                //Console.WriteLine("TTL = {0}",TTL);
 
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
                 //определяем тип задачи
                 int N = 0,
                 task_type = 0;
                 XmlDocument xml = new XmlDocument();
                 xml.LoadXml(message.ToString());
                 XmlNamespaceManager manager = new XmlNamespaceManager(xml.NameTable);
-                manager.AddNamespace("s", "http://schemas.xmlsoap.org/soap/envelope/");
+                manager.AddNamespace("s", "http://www.w3.org/2003/05/soap-envelope");
                 XmlNode xn = xml.SelectSingleNode("//s:Body", manager);
                 Guid messageId = Guid.Empty;
                 if (xn != null)
@@ -408,12 +423,17 @@ namespace testWCF
                                     endpoint = this.filters[matchingFilter].ElementAt(0);
 
                                     //проверка доступности
+                                    
+                                    /*
                                     BasicHttpBinding binding = new BasicHttpBinding();
                                     EndpointAddress endpoint_check = new EndpointAddress(endpoint.Address.Uri.ToString().Replace("Router", ""));
                                     ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
                                         endpoint_check);
                                     IInterface proxy = factory.CreateChannel();
                                     proxy.Check();
+                                    factory.Close();
+                                    */
+                                    
 
                                     Logger.Log(messageId, "router", "routing"
                                         , Program.nt.getPerfomance(), Convert.ToInt16(task_type), 0,optimize_host);
@@ -423,11 +443,12 @@ namespace testWCF
                             else
                             {
                                 Program.nt.getPerfomance().CountTask++;
-                                Uri uri_self = Program.nt.getPerfomance().Uri;
-                                string str = uri_self.AbsoluteUri.Replace("Router", "");
+                                Program.nt.getPerfomance().incCountTask(task_type);
+                                //Uri uri_self = Program.nt.getPerfomance().Uri;
+                                string str = Program.host.Description.Endpoints[0].Address.ToString(); //uri_self.AbsoluteUri.Replace("Router", "");
                                 Console.WriteLine("Routing inside host() :  " + str);
                                 Program.Log(String.Format("Routing inside host() :  " + str));
-                                uri_self = new Uri(str);
+                                Uri uri_self = new Uri(str);
                                 matchingFilter = GetByUri(group, uri_self);
                                 endpoint = this.filters[matchingFilter].ElementAt(0);
                             }
@@ -450,6 +471,12 @@ namespace testWCF
                     //тут добавляем конечную точку сервиса на которую уйдет наше сообщение
                     TFilterData filter = this.filters[matchingFilter];
                     results.Add(filter);
+
+                    TimeSpan ts = stopWatch.Elapsed;
+                    string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                        ts.Hours, ts.Minutes, ts.Seconds,
+                        ts.Milliseconds / 10);
+                    Program.Log("Выбор сервера занял " + elapsedTime);
                     foundSome = true;
                 }
 

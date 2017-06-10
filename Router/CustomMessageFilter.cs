@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.ServiceModel.Channels;
@@ -311,6 +312,8 @@ namespace Router
                     , DateTime.Now.ToString());
                 message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 4));
 
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
                 //определяем тип задачи
                 int N = 0,
                 task_type = 0;
@@ -389,12 +392,13 @@ namespace Router
                             ct.setGuid(messageId);
                             Program.tasks.Add(ct);
 
-                            BasicHttpBinding binding = new BasicHttpBinding();
-                            EndpointAddress endpoint_check = new EndpointAddress(endpoint.Address.Uri.ToString().Replace("Router", ""));
-                            ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
-                                endpoint_check);
-                            IInterface proxy = factory.CreateChannel();
-                            proxy.Check();
+                            /* NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
+                             EndpointAddress endpoint_check = new EndpointAddress(endpoint.Address.Uri.ToString().Replace("Router", ""));
+                             ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
+                                 endpoint_check);
+                             IInterface proxy = factory.CreateChannel();
+                             proxy.Check();
+                             */
 
                             Logger.Log(messageId, "router", "routing"
                                 , Program.nt.getPerfomance(), Convert.ToInt16(task_type),0, host);
@@ -420,6 +424,11 @@ namespace Router
                     foundSome = true;
                 }
 
+                TimeSpan ts = stopWatch.Elapsed;
+                string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                    ts.Hours, ts.Minutes, ts.Seconds,
+                    ts.Milliseconds / 10);
+                Console.WriteLine("Выбор сервера занял " + elapsedTime);
                 return foundSome;
             }
 

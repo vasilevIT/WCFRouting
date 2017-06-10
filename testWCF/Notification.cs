@@ -187,7 +187,7 @@ ProtocolType.Udp);
 
         public PerfomanceData calcServerIndexes(ConcurrentBag<CustomTask> tasks, int taskType)
         {
-            Console.WriteLine("calcServerIndexes()");
+           // Console.WriteLine("calcServerIndexes()");
            List<PerfomanceData> list = servers.getList();
             int optimize_server = 0;
             double optimize_index = 0; // ->max
@@ -197,7 +197,7 @@ ProtocolType.Udp);
                 List<CustomTask> task_info = tasks.ToList().FindAll(x => x.working_server == list[i].Uri);
                
                 double index = getServerIndex(list[i],task_info, taskType);
-                Console.WriteLine("server {2}: {0} index: {1} tasks: {3}", list[i].Uri, index, i, task_info.Count);
+              //  Console.WriteLine("server {2}: {0} index: {1} tasks: {3}", list[i].Uri, index, i, task_info.Count);
                 if (index > optimize_index)
                 {
                     optimize_index = index;
@@ -205,7 +205,7 @@ ProtocolType.Udp);
                 }
 
             }
-            Console.WriteLine("Optimize server: {0} index: {1}",list[optimize_server].Uri,optimize_index);
+           // Console.WriteLine("Optimize server: {0} index: {1}",list[optimize_server].Uri,optimize_index);
             return list[optimize_server];
 
         }
@@ -270,8 +270,8 @@ ProtocolType.Udp);
             {
                 X += resourceOs * sec;
             }
-            Console.WriteLine("Затраты задачи({1}): {0}", (resource),taskType);
-            Console.WriteLine("Затраты OS({1}): {0}", resourceOs,taskType);
+           // Console.WriteLine("Затраты задачи({1}): {0}", (resource),taskType);
+           // Console.WriteLine("Затраты OS({1}): {0}", resourceOs,taskType);
 
             if (X > 0)
             {

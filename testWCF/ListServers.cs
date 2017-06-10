@@ -46,8 +46,8 @@ namespace testWCF
                 //update router configuration
                 ServiceEndpoint endpoint_self = new ServiceEndpoint(
                         ContractDescription.GetContract(typeof(IInterface))
-                        , new BasicHttpBinding()
-                        , new EndpointAddress(Program.address.Uri.ToString().Replace("Router",""))
+                        , new NetTcpBinding(SecurityMode.None)
+                        , new EndpointAddress(Program.host.Description.Endpoints[0].Address.ToString())
                         );
                 rc.FilterTable.Add(
                     new RoundRobinMessageFilter("customGroup_custom")
@@ -57,7 +57,7 @@ namespace testWCF
                 {
                     ServiceEndpoint endpoint = new ServiceEndpoint(
                         ContractDescription.GetContract(typeof(IRequestReplyRouter))
-                        , new BasicHttpBinding()
+                        , new NetTcpBinding(SecurityMode.None)
                         , new EndpointAddress(servers[i].Uri)
                         );
                     rc.FilterTable.Add(

@@ -9,7 +9,7 @@ using System.Xml;
 
 namespace Library
 {
-    [ServiceContract]
+    [ServiceContract(SessionMode = SessionMode.NotAllowed)]
     public interface IInterface
     {
         [OperationContract]

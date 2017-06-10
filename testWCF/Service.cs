@@ -11,7 +11,9 @@ using Router;
 
 namespace testWCF
 {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall,ConcurrencyMode = ConcurrencyMode.Multiple)]
+    [ServiceBehavior(
+        InstanceContextMode = InstanceContextMode.PerCall
+        ,ConcurrencyMode = ConcurrencyMode.Multiple)]
     class Service : IInterface2 , IDisposable , ContractCPU, ContractRAM
     {
 
@@ -59,7 +61,7 @@ namespace testWCF
             try
             {
                 // setTaskGuid(0, Program.nt.getPerfomance().Uri, id);
-                Program.nt.getPerfomance().incCountTask(0);
+                //Program.nt.getPerfomance().incCountTask(0);
                 Program.nt.getPerfomance().UpdateAvg(0);
                 Program.nt.getPerfomance().UpdateArgs(Convert.ToInt32(N), 0);
                 Program.formInfo.Invoke(new Action(() => Program.formInfo.updateField(Program.nt.getPerfomance())));
@@ -70,12 +72,11 @@ namespace testWCF
                 float y1 = ramCounter.NextValue();
                 for (int i = 0; i < N; i++)
                 {
-                    Thread.Sleep(TimeSpan.FromMilliseconds(2));
-                    for (int j = 0; j < N*2; j++)
+                    Thread.Sleep(TimeSpan.FromMilliseconds(4));
+                    for (int j = 0; j < N; j++)
                     {
                         for (int k = 0; k < N*3; k++)
                         {
-
                             sum = sum + i*(j ^ i) + k;
                         }
                     }
@@ -136,7 +137,7 @@ namespace testWCF
             //Console.WriteLine("createBigCollection();");
             Logger.Log(id, "server", "begin calc", Program.nt.getPerfomance(), 1, 0);
             Program.nt.getPerfomance().UpdateAvg(1);
-            Program.nt.getPerfomance().incCountTask(1);
+            //Program.nt.getPerfomance().incCountTask(1);
             Program.nt.getPerfomance().UpdateArgs(Convert.ToInt32(N), 1);
             Program.formInfo.Invoke(new Action(() => Program.formInfo.updateField(Program.nt.getPerfomance())));
             
@@ -155,7 +156,7 @@ namespace testWCF
             }
             for (int i = 0; i < N; i++)
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(5));
+                Thread.Sleep(TimeSpan.FromMilliseconds(10));
                 for (int j = 0; j < N; j++)
                 {
                 list_double.Add(r.NextDouble());
@@ -243,7 +244,7 @@ namespace testWCF
         private void completeTask(Guid guid)
         {
             Uri address = new Uri(Program.config.AppSettings.Settings["routerService"].Value);
-            BasicHttpBinding binding = new BasicHttpBinding();
+            NetTcpBinding binding = new NetTcpBinding(SecurityMode.None);
             EndpointAddress endpoint = new EndpointAddress(address);
             ChannelFactory<IRouterService> factory = new ChannelFactory<IRouterService>(binding, endpoint);
             IRouterService proxy = factory.CreateChannel();

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Library
 {
-    [ServiceContract]
+    [ServiceContract(SessionMode = SessionMode.NotAllowed)]
     public interface ContractCPU
     {
         [OperationContract]

@@ -18,7 +18,10 @@ namespace LogAnalyser
     public partial class Form1 : Form
     {
         private List<LogData> list = new List<LogData>();
-        private int numberTest = 3;
+        // 3 - запрос в 1 секунду
+        // 2 - запрос в 2 секунды
+        // 1 - запрос в 0.5 секунды
+        private int numberTest = 1;
         public Form1()
         {
             InitializeComponent();
@@ -222,7 +225,16 @@ namespace LogAnalyser
                         time2 += duration.TotalSeconds;
                     }
 
-                    dictionary.Add(list[i].uri,new string[] {
+
+                        if (count_task1 == 0)
+                        {
+                            count_task1 = 1;
+                        }
+                        if (count_task2 == 0)
+                        {
+                            count_task2 = 1;
+                        }
+                        dictionary.Add(list[i].uri,new string[] {
                         count_task1.ToString()
                         ,count_task2.ToString()
                         ,(cpu1/task1.Count).ToString("F")

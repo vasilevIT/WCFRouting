@@ -48,13 +48,13 @@ namespace Router
                 {
                     ServiceEndpoint endpoint = new ServiceEndpoint(
                         ContractDescription.GetContract(typeof(IRequestReplyRouter))
-                        , new BasicHttpBinding()
+                        , new NetTcpBinding(SecurityMode.None)
                         , new EndpointAddress(servers[i].Uri)
                         );
                     rc.FilterTable.Add(
                         new CustomMessageFilter("customGroup_custom"), new List<ServiceEndpoint> { endpoint }
                         );
-                }
+                } 
                 host.Extensions.Find<RoutingExtension>().ApplyConfiguration(rc);
 
                 Console.WriteLine("Updating Configuration");

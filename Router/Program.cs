@@ -25,9 +25,9 @@ namespace Router
 
         static void Main(string[] args)
         {
-            System.Net.ServicePointManager.DefaultConnectionLimit = 20;
-            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 20);
-            ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
+            System.Net.ServicePointManager.DefaultConnectionLimit = 100;
+            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 150);
+            ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 100);
 
             Console.Title = "Router";
 

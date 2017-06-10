@@ -15,6 +15,7 @@ namespace testWCF
     public class Program
     {
         public static Notification nt;
+        public static ServiceHost host;
         public static bool isRouter = false;
         public static EndpointAddress address = null;
 
@@ -26,16 +27,16 @@ namespace testWCF
         static void Main(string[] args)
         {
             
-            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 10);
-           // ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 5);
-            System.Net.ServicePointManager.DefaultConnectionLimit = 10;
+            ThreadPool.SetMaxThreads(Thread.CurrentThread.ManagedThreadId, 150);
+            ThreadPool.SetMinThreads(Thread.CurrentThread.ManagedThreadId, 100);
+            System.Net.ServicePointManager.DefaultConnectionLimit = 100;
 
             //Application.Run(new FormInfo());
 
             //    Console.Title = "Server";
             Thread viewerThread = new Thread(delegate ()
             {
-                ServiceHost host = new ServiceHost(typeof(Service));
+                host = new ServiceHost(typeof(Service));
                 host.Open();
 
                 ServiceHost routing_host = new ServiceHost(typeof(RoutingService));

@@ -186,7 +186,7 @@ ProtocolType.Udp);
 
         public PerfomanceData calcServerIndexes(ConcurrentBag<CustomTask> tasks, int taskType)
         {
-            Console.WriteLine("calcServerIndexes()");
+           // Console.WriteLine("calcServerIndexes()");
            List<PerfomanceData> list = servers.getList();
             int optimize_server = 0;
             double optimize_index = 0; // ->max
@@ -204,7 +204,7 @@ ProtocolType.Udp);
                 }
 
             }
-            Console.WriteLine("Optimize server: {0} index: {1}",list[optimize_server].Uri,optimize_index);
+           // Console.WriteLine("Optimize server: {0} index: {1}",list[optimize_server].Uri,optimize_index);
             return list[optimize_server];
 
         }

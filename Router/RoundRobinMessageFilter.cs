@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.ServiceModel.Channels;
@@ -319,6 +320,8 @@ namespace Router
                     , DateTime.Now.ToString());
                 message.Headers.Add(MessageHeader.CreateHeader("TTL", "", 1));
 
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
                 //определяем тип задачи
                 int N = 0,
                 task_type = 0;
@@ -395,10 +398,12 @@ namespace Router
                             Logger.Log(messageId, "router", "routing",Program.nt.getPerfomance()
                                 ,Convert.ToInt16(task_type),0,host);
 
+                            /*
                             BasicHttpBinding binding = new BasicHttpBinding();
                             ChannelFactory<IInterface> factory = new ChannelFactory<IInterface>(binding,
                                 endpoint.Address);
                             IInterface proxy = factory.CreateChannel();
+                            */
                            //  proxy.Check();
                             
                             break;
@@ -416,6 +421,12 @@ namespace Router
                     {
                         throw new Exception("Нет доступных конечных точек.");
                     }
+
+                    TimeSpan ts = stopWatch.Elapsed;
+                    string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                        ts.Hours, ts.Minutes, ts.Seconds,
+                        ts.Milliseconds / 10);
+                    Console.WriteLine("Выбор сервера занял " + elapsedTime);
                     //тут добавляем конечную точку сервиса на которую уйдет наше сообщение
                     TFilterData filter = this.filters[matchingFilter];
                     results.Add(filter);
